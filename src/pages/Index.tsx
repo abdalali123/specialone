@@ -5,12 +5,12 @@ import { ExperiencePhases } from '@/components/experience/ExperiencePhases';
 import { defaultConfig, ExperienceConfig } from '@/config/experience';
 import { useAudioManager } from '@/hooks/useAudioManager';
 
-// Served from Vite `public` root
+// Background music tracks served from Vite `public` root
 const MUSIC_TRACKS = [
-  "/music/CountingStars.mp3",
-  "/music/goldenhour.mp3",
-  "/music/LoveStory.mp3",
-  "/music/Skyfall.mp3",
+  "music/CountingStars.mp3",
+  "music/goldenhour.mp3",
+  "music/LoveStory.mp3",
+  "music/Skyfall.mp3",
 ];
 
 const Index = () => {
@@ -109,6 +109,10 @@ const Index = () => {
       role="main"
       aria-label="Birthday Landing Gateway"
     >
+      {/* Global hidden audio for background music (persists across phases) */}
+      {landingTrack && (
+        <audio ref={landingAudioRef} src={landingTrack} loop />
+      )}
       {/* Language switcher */}
       <LanguageSwitcher
         currentLang={language}
@@ -118,15 +122,11 @@ const Index = () => {
       {/* Landing gateway */}
       {!hasEnteredExperience && (
         <div className="relative flex min-h-screen flex-col items-center justify-center px-6">
-          {/* Hidden audio element for landing music */}
-          {landingTrack && (
-            <audio ref={landingAudioRef} src={landingTrack} loop />
-          )}
           {/* Background celebration video */}
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
             <video
               className="h-full w-full object-cover"
-              src="/video/birthday-cake-intro.mp4"
+              src="video/birthday-cake-intro.mp4"
               autoPlay
               loop
               muted
