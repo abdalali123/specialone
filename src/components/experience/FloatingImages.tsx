@@ -24,6 +24,7 @@ interface FloatingImagesProps {
 
 export const FloatingImages = ({ images, isVisible, enableGyro }: FloatingImagesProps) => {
   const [floatingImages, setFloatingImages] = useState<FloatingImage[]>([]);
+  const [draggingId, setDraggingId] = useState<number | null>(null);
   const gyro = useGyroscope(enableGyro);
   
   useEffect(() => {
@@ -55,14 +56,39 @@ export const FloatingImages = ({ images, isVisible, enableGyro }: FloatingImages
         // Parallax offset based on gyroscope/mouse
         const parallaxX = gyro.x * 40 * img.depth;
         const parallaxY = gyro.y * 25 * img.depth;
+        const isDragging = draggingId === img.id;
         
         return (
           <div
             key={img.id}
             className={cn(
-              'absolute rounded-sm overflow-hidden',
+              'absolute rounded-sm overflow-hidden pointer-events-auto touch-none cursor-grab active:cursor-grabbing',
               'shadow-2xl'
             )}
+            onPointerDown={(e) => {
+              e.preventDefault();
+              (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+              setDraggingId(img.id);
+            }}
+            onPointerUp={(e) => {
+              (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+              setDraggingId(null);
+            }}
+            onPointerCancel={() => {
+              setDraggingId(null);
+            }}
+            onPointerMove={(e) => {
+              if (draggingId !== img.id) return;
+              const vw = window.innerWidth || 1;
+              const vh = window.innerHeight || 1;
+              const newX = (e.clientX / vw) * 100;
+              const newY = (e.clientY / vh) * 100;
+              setFloatingImages((prev) =>
+                prev.map((item) =>
+                  item.id === img.id ? { ...item, x: newX, y: newY } : item
+                )
+              );
+            }}
             style={{
               left: `${img.x}%`,
               top: `${img.y}%`,
@@ -74,7 +100,9 @@ export const FloatingImages = ({ images, isVisible, enableGyro }: FloatingImages
                 rotate(${img.rotation}deg)
               `,
               opacity: 0,
-              animation: `
+              animation: isDragging
+                ? `floating-image-enter 2.5s cubic-bezier(0.4, 0, 0.2, 1) ${img.delay}s forwards`
+                : `
                 floating-image-enter 2.5s cubic-bezier(0.4, 0, 0.2, 1) ${img.delay}s forwards,
                 floating-drift ${img.floatDuration}s ease-in-out ${img.delay + 2}s infinite alternate
               `,
