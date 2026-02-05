@@ -47,43 +47,72 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        sidebar: {
-          DEFAULT: "hsl(var(--sidebar-background))",
-          foreground: "hsl(var(--sidebar-foreground))",
-          primary: "hsl(var(--sidebar-primary))",
-          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
-          accent: "hsl(var(--sidebar-accent))",
-          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
-          border: "hsl(var(--sidebar-border))",
-          ring: "hsl(var(--sidebar-ring))",
-        },
+        // Black Mature Birthday accent colors
+        cyan: "hsl(var(--accent-cyan))",
+        magenta: "hsl(var(--accent-magenta))",
+        gold: "hsl(var(--accent-gold))",
+        neon: "hsl(var(--neon))",
+        void: "hsl(var(--bg-1))",
+        "void-deep": "hsl(var(--bg-2))",
+      },
+      fontFamily: {
+        sans: ['var(--font-en)', 'system-ui', 'sans-serif'],
+        arabic: ['var(--font-ar)', 'sans-serif'],
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      transitionTimingFunction: {
+        'cinematic': 'cubic-bezier(0.4, 0, 0.2, 1)',
+        'slow': 'cubic-bezier(0.25, 0.1, 0.25, 1)',
+      },
+      transitionDuration: {
+        'fade': '1200ms',
+        'text': '800ms',
+        '2000': '2000ms',
+        '3000': '3000ms',
+      },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+        "fade-in-up": {
+          "0%": { opacity: "0", transform: "translateY(25px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        "fade-in": {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        "fade-out": {
+          "0%": { opacity: "1" },
+          "100%": { opacity: "0" },
+        },
+        "float": {
+          "0%, 100%": { transform: "translateY(0) rotate(0deg)" },
+          "25%": { transform: "translateY(-15px) rotate(1deg)" },
+          "75%": { transform: "translateY(10px) rotate(-1deg)" },
+        },
+        "pulse-glow": {
+          "0%, 100%": { opacity: "0.3" },
+          "50%": { opacity: "0.6" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "fade-in-up": "fade-in-up 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards",
+        "fade-in": "fade-in 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards",
+        "fade-out": "fade-out 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards",
+        "float": "float 10s ease-in-out infinite",
+        "pulse-glow": "pulse-glow 3s ease-in-out infinite",
       },
     },
   },
