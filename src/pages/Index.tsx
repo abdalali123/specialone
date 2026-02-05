@@ -87,7 +87,7 @@ const Index = () => {
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
             <video
               className="h-full w-full object-cover"
-              src="/video/birthday%20cake%20intro.mp4"
+              src="/video/birthday-cake-intro.mp4"
               autoPlay
               loop
               muted
