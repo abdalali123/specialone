@@ -164,16 +164,7 @@ const NormalBirthday = () => {
         </p>
         
         {/* Back button */}
-        <button onClick={() => navigate('/')} className="group relative px-8 py-4 rounded-full font-light tracking-wide transition-all duration-500 hover:scale-105" style={{
-        background: 'linear-gradient(135deg, hsl(186 100% 50% / 0.15), hsl(330 100% 57% / 0.15))',
-        color: 'hsl(210 33% 90%)',
-        border: '1px solid hsl(210 33% 97% / 0.2)',
-        backdropFilter: 'blur(10px)',
-        animation: 'fade-in-up 1s 1.2s both'
-      }}>
-          <span className="relative z-10">​</span>
-          
-        </button>
+        
       </div>
       
       {/* Ambient glow orbs */}
