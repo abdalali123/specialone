@@ -83,7 +83,21 @@ const Index = () => {
       {/* Landing gateway */}
       {!hasEnteredExperience && (
         <div className="relative flex min-h-screen flex-col items-center justify-center px-6">
-          {/* Text + cake stack */}
+          {/* Background celebration video */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <video
+              className="h-full w-full object-cover"
+              src="/video/birthday-cake-intro.mp4"
+              autoPlay
+              loop
+              muted
+              playsInline
+            />
+            {/* Dark overlay so text stays readable */}
+            <div className="absolute inset-0 bg-black/60" />
+          </div>
+
+          {/* Text and CTA overlay */}
           <section
             id="main-content"
             className="relative z-10 flex w-full max-w-md flex-col items-center text-center gap-4"
@@ -97,32 +111,6 @@ const Index = () => {
             <p className="text-sm font-light opacity-80">
               Today is yours.
             </p>
-
-            {/* Celebration cake with moving color sparks */}
-            <div className="relative mt-4 h-40 w-40 sm:h-48 sm:w-48">
-              {/* Color bursts / fireworks */}
-              {['#00e6ff', '#ff4ecd', '#ffd166', '#7b5cff'].map((color, i) => (
-                <span
-                  key={color}
-                  className="absolute h-2 w-2 rounded-full"
-                  style={{
-                    backgroundColor: color,
-                    left: `${15 + i * 20}%`,
-                    top: i % 2 === 0 ? '10%' : '0%',
-                    opacity: 0.9,
-                    boxShadow: `0 0 14px ${color}`,
-                    animation: `particle-float ${10 + i * 2}s ease-in-out ${i * 0.4}s infinite`,
-                  }}
-                />
-              ))}
-
-              {/* Cake image */}
-              <img
-                src="/images/cake.png"
-                alt="Birthday cake"
-                className="relative z-10 h-full w-full object-contain"
-              />
-            </div>
 
             {/* CTA */}
             <button
