@@ -79,6 +79,8 @@ const Index = () => {
 
     // Start happy track directly on user gesture (plays for whole visit)
     if (landingAudioRef.current) {
+      // lower volume to about 40%
+      landingAudioRef.current.volume = 0.4;
       const playPromise = landingAudioRef.current.play();
       if (playPromise && playPromise.catch) {
         playPromise.catch(() => {
