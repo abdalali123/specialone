@@ -4,7 +4,7 @@ import { PhaseText } from './PhaseText';
 import { ChoiceButtons } from './ChoiceButtons';
 import { FloatingImages } from './FloatingImages';
 import { t, getCurrentTime, ExperienceConfig } from '@/config/experience';
-import type { useAudioManager } from '@/hooks/useAudioManager';
+import { useAudioManager } from '@/hooks/useAudioManager';
 
 type Phase = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
@@ -14,6 +14,7 @@ interface ExperiencePhasesProps {
   isStarted: boolean;
   onExit: () => void;
   audio: ReturnType<typeof useAudioManager>;
+  initialPhase?: Phase;
 }
 
 export const ExperiencePhases = ({
@@ -22,8 +23,9 @@ export const ExperiencePhases = ({
   isStarted,
   onExit,
   audio,
+  initialPhase = 0,
 }: ExperiencePhasesProps) => {
-  const [currentPhase, setCurrentPhase] = useState<Phase>(0);
+  const [currentPhase, setCurrentPhase] = useState<Phase>(initialPhase);
   const [userChoice, setUserChoice] = useState<'yes' | 'no' | null>(null);
   const [showButtons, setShowButtons] = useState(false);
   const [textSequence, setTextSequence] = useState(0);
