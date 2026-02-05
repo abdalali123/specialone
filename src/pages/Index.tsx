@@ -70,7 +70,7 @@ const Index = () => {
   
   return (
     <main
-      className="relative min-h-screen overflow-hidden bg-[#050509] text-[#f5f7fa]"
+      className="relative min-h-screen overflow-hidden bg-black text-white"
       role="main"
       aria-label="Birthday Landing Gateway"
     >
@@ -83,19 +83,7 @@ const Index = () => {
       {/* Landing gateway */}
       {!hasEnteredExperience && (
         <div className="relative flex min-h-screen flex-col items-center justify-center px-6">
-          {/* Torch-lit corridor background */}
-          <div className="pointer-events-none absolute inset-0 overflow-hidden">
-            {/* Left wall torch glow */}
-            <div className="absolute inset-y-0 left-0 w-1/3 bg-[radial-gradient(circle_at_20%_50%,rgba(255,209,102,0.35),transparent_60%)] opacity-80" />
-            {/* Right wall torch glow */}
-            <div className="absolute inset-y-0 right-0 w-1/3 bg-[radial-gradient(circle_at_80%_50%,rgba(255,209,102,0.35),transparent_60%)] opacity-80" />
-            {/* Floor fade */}
-            <div className="absolute inset-x-0 bottom-0 h-1/3 bg-[radial-gradient(circle_at_50%_120%,rgba(0,0,0,0),rgba(0,0,0,0.9))]" />
-            {/* Subtle vertical bands to suggest a space */}
-            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.03)_0,transparent_4%,transparent_96%,rgba(255,255,255,0.03)_100%)]" />
-          </div>
-
-          {/* Text stack */}
+          {/* Text + cake stack */}
           <section
             id="main-content"
             className="relative z-10 flex w-full max-w-md flex-col items-center text-center gap-4"
@@ -103,19 +91,45 @@ const Index = () => {
             <p className="tracking-[0.2em] text-xs uppercase opacity-80">
               HAPPY BIRTHDAY, TO YOU
             </p>
-            <h1 className="text-3xl sm:text-4xl font-normal tracking-[0.2em] uppercase text-[#f5f7fa]">
+            <h1 className="text-3xl sm:text-4xl font-normal tracking-[0.2em] uppercase text-white">
               {config.name || 'YOU'}
             </h1>
             <p className="text-sm font-light opacity-80">
               Today is yours.
             </p>
 
+            {/* Celebration cake with moving color sparks */}
+            <div className="relative mt-4 h-40 w-40 sm:h-48 sm:w-48">
+              {/* Color bursts / fireworks */}
+              {['#00e6ff', '#ff4ecd', '#ffd166', '#7b5cff'].map((color, i) => (
+                <span
+                  key={color}
+                  className="absolute h-2 w-2 rounded-full"
+                  style={{
+                    backgroundColor: color,
+                    left: `${15 + i * 20}%`,
+                    top: i % 2 === 0 ? '10%' : '0%',
+                    opacity: 0.9,
+                    boxShadow: `0 0 14px ${color}`,
+                    animation: `particle-float ${10 + i * 2}s ease-in-out ${i * 0.4}s infinite`,
+                  }}
+                />
+              ))}
+
+              {/* Cake image */}
+              <img
+                src="/images/cake.png"
+                alt="Birthday cake"
+                className="relative z-10 h-full w-full object-contain"
+              />
+            </div>
+
             {/* CTA */}
             <button
               type="button"
               onClick={handleStart}
               disabled={isTransitioning}
-              className="mt-4 inline-flex items-center justify-center rounded-xl px-10 py-3 text-sm font-medium tracking-[0.18em] uppercase bg-black/90 text-white border border-white/30 shadow-[0_0_18px_rgba(0,0,0,0.9)] transition-transform duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-white focus-visible:ring-offset-[#050509] active:scale-95"
+              className="mt-6 inline-flex items-center justify-center rounded-xl px-10 py-3 text-sm font-medium tracking-[0.18em] uppercase bg-black text-white border border-white/40 shadow-[0_0_14px_rgba(255,255,255,0.18)] transition-transform duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-white focus-visible:ring-offset-black active:scale-95"
               style={{
                 transform: isTransitioning ? 'scale(0.98)' : undefined,
               }}
