@@ -6,10 +6,10 @@ import { defaultConfig, ExperienceConfig } from '@/config/experience';
 import { useAudioManager } from '@/hooks/useAudioManager';
 
 const MUSIC_TRACKS = [
-  "/music/Adele − Skyfall − Piano Cover + Sheet Music.mp3",
-  "/music/Indila - Love Story (Piano Cover).mp3",
-  "/music/JVKE - golden hour  Piano Cover by Pianella Piano.mp3",
-  "/music/OneRepublic - Counting Stars  Piano Cover by Pianella Piano.mp3",
+  "/music/CountingStars.mp3",
+  "/music/goldenhour.mp3",
+  "/music/LoveStory.mp3",
+  "/music/Skyfall.mp3",
 ];
 
 const Index = () => {
@@ -80,12 +80,11 @@ const Index = () => {
       });
     }
 
-    // Start happy track directly on user gesture
+    // Start happy track directly on user gesture (plays for whole visit)
     audio.playCelebration(landingTrack || config.audio.celebration);
 
-    // Short transition, then hand off to Phase 1
+    // Short visual transition, then hand off to Phase 1
     setTimeout(() => {
-      audio.stopAll();
       setHasEnteredExperience(true);
     }, 1000);
   };

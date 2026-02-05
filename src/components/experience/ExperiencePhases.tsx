@@ -58,11 +58,15 @@ export const ExperiencePhases = ({
     return () => clearTimeout(timer);
   }, [isStarted, currentPhase, config.timings, audio]);
 
-  // Phase 1 - Start calm ambient/piano as soon as we enter
+  // Phase 1 - Optionally start ambient audio.
+  // Landing page now starts a global track; to avoid double music,
+  // we only start ambient if no audio is currently playing.
   useEffect(() => {
     if (!isStarted || currentPhase !== 1) return;
-    audio.playAmbient(config.audio.ambient);
-  }, [isStarted, currentPhase, audio, config.audio.ambient]);
+    if (!audio.audioState.isPlaying) {
+      audio.playAmbient(config.audio.ambient);
+    }
+  }, [isStarted, currentPhase, audio, audio.audioState.isPlaying, config.audio.ambient]);
   
   // Phase 1 - Show buttons after delay
   useEffect(() => {
@@ -113,12 +117,8 @@ export const ExperiencePhases = ({
     return () => clearTimeout(timer);
   }, [currentPhase]);
   
-  // Phase 5 - Reinterpret - bring back celebration distant
-  useEffect(() => {
-    if (currentPhase === 5) {
-      audio.playCelebrationDistant();
-    }
-  }, [currentPhase, audio]);
+  // Phase 5 - Reinterpret
+  // (We no longer restart celebration audio here to keep one continuous track.)
   
   // Get replacement values
   const replacements = {
