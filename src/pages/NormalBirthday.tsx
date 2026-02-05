@@ -172,9 +172,7 @@ const NormalBirthday = () => {
         animation: 'fade-in-up 1s 1.2s both'
       }}>
           <span className="relative z-10">​</span>
-          <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{
-          background: 'linear-gradient(135deg, hsl(186 100% 50% / 0.25), hsl(330 100% 57% / 0.25))'
-        }} />
+          
         </button>
       </div>
       
