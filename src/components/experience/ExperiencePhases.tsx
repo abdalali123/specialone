@@ -127,7 +127,7 @@ export const ExperiencePhases = ({
   
   return (
     <div
-      className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden"
+      className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden void-stars"
       style={{ background: isCutActive ? 'hsl(0 0% 0%)' : undefined }}
     >
       {/* Phase 0 - Chaos */}

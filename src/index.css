@@ -173,11 +173,11 @@
   
   /* Chaos phase elements */
   .chaos-gradient {
-    background:
-      radial-gradient(circle at 25% 25%, hsl(var(--accent-cyan) / 0.16), transparent 55%),
-      radial-gradient(circle at 75% 70%, hsl(var(--accent-magenta) / 0.14), transparent 60%),
-      radial-gradient(circle at 55% 35%, hsl(var(--accent-gold) / 0.10), transparent 62%),
-      radial-gradient(ellipse at 50% 50%, hsl(var(--bg-2)), hsl(var(--bg-1)) 70%);
+    background: radial-gradient(
+      ellipse at 50% 50%,
+      hsl(var(--bg-2)),
+      hsl(var(--bg-1)) 70%
+    );
   }
   
   .neon-streak {
@@ -262,6 +262,16 @@
   /* Micro glitch effect */
   .glitch {
     @apply relative inline-block;
+  }
+
+  /* Void starfield background */
+  .void-stars {
+    @apply relative bg-black;
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(255,255,255,0.15) 0, transparent 50%),
+      radial-gradient(circle at 80% 10%, rgba(255,255,255,0.12) 0, transparent 55%),
+      radial-gradient(circle at 10% 80%, rgba(255,255,255,0.08) 0, transparent 55%);
+    background-color: #02010a;
   }
   
   .glitch::before,
