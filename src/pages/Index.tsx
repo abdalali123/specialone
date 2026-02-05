@@ -7,10 +7,10 @@ import { useAudioManager } from '@/hooks/useAudioManager';
 
 // Background music tracks served from Vite `public` root
 const MUSIC_TRACKS = [
-  "music/CountingStars.mp3",
-  "music/goldenhour.mp3",
-  "music/LoveStory.mp3",
-  "music/Skyfall.mp3",
+  "/music/CountingStars.mp3",
+  "/music/goldenhour.mp3",
+  "/music/LoveStory.mp3",
+  "/music/Skyfall.mp3",
 ];
 
 const Index = () => {
