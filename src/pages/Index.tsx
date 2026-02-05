@@ -5,12 +5,20 @@ import { ExperiencePhases } from '@/components/experience/ExperiencePhases';
 import { defaultConfig, ExperienceConfig } from '@/config/experience';
 import { useAudioManager } from '@/hooks/useAudioManager';
 
+const MUSIC_TRACKS = [
+  "/music/Adele − Skyfall − Piano Cover + Sheet Music.mp3",
+  "/music/Indila - Love Story (Piano Cover).mp3",
+  "/music/JVKE - golden hour  Piano Cover by Pianella Piano.mp3",
+  "/music/OneRepublic - Counting Stars  Piano Cover by Pianella Piano.mp3",
+];
+
 const Index = () => {
   const navigate = useNavigate();
   const [config, setConfig] = useState<ExperienceConfig>(defaultConfig);
   const [language, setLanguage] = useState<'en' | 'ar' | 'ru'>('en');
   const [hasEnteredExperience, setHasEnteredExperience] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [landingTrack, setLandingTrack] = useState<string | undefined>(undefined);
   const audio = useAudioManager();
   
   // Update document direction for RTL languages
@@ -41,6 +49,19 @@ const Index = () => {
     }
   }, []);
 
+  // Pick a random landing music track on each page load
+  useEffect(() => {
+    if (MUSIC_TRACKS.length > 0) {
+      const random = MUSIC_TRACKS[Math.floor(Math.random() * MUSIC_TRACKS.length)];
+      setLandingTrack(random);
+      audio.preloadAudio({
+        celebration: random,
+        ambient: config.audio.ambient,
+        heartbeat: config.audio.heartbeat,
+      });
+    }
+  }, [audio, config.audio.ambient, config.audio.heartbeat]);
+
   // Handle language change
   const handleLanguageChange = (lang: 'en' | 'ar' | 'ru') => {
     setLanguage(lang);
@@ -52,8 +73,15 @@ const Index = () => {
     if (isTransitioning) return;
     setIsTransitioning(true);
 
+    // Request fullscreen on user gesture (supported browsers only)
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(() => {
+        // Ignore failures (e.g. if browser blocks it)
+      });
+    }
+
     // Start happy track directly on user gesture
-    audio.playCelebration(config.audio.celebration);
+    audio.playCelebration(landingTrack || config.audio.celebration);
 
     // Short transition, then hand off to Phase 1
     setTimeout(() => {

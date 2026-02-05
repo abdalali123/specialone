@@ -6,7 +6,7 @@ import { FloatingImages } from './FloatingImages';
 import { t, getCurrentTime, ExperienceConfig } from '@/config/experience';
 import { useAudioManager } from '@/hooks/useAudioManager';
 
-type Phase = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+type Phase = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
 interface ExperiencePhasesProps {
   config: ExperienceConfig;
@@ -84,16 +84,16 @@ export const ExperiencePhases = ({
   
   // Phase progression
   useEffect(() => {
-    if (currentPhase < 2 || currentPhase >= 8) return;
+    if (currentPhase < 2 || currentPhase >= 9) return;
     
     // Auto-progress through phases with text sequences
     const progressPhase = () => {
-      if (currentPhase < 7) {
+      if (currentPhase < 8) {
         setCurrentPhase((prev) => (prev + 1) as Phase);
         setTextSequence(0);
-      } else if (currentPhase === 7) {
+      } else if (currentPhase === 8) {
         // Final phase - show images
-        setCurrentPhase(8);
+        setCurrentPhase(9);
       }
     };
     
@@ -104,7 +104,8 @@ export const ExperiencePhases = ({
       4: 7000,
       5: 6000,
       6: 8000,
-      7: 8000,
+      7: 18000,
+      8: 8000,
     };
     
     const timer = setTimeout(progressPhase, phaseDurations[currentPhase] || 6000);
@@ -258,8 +259,27 @@ export const ExperiencePhases = ({
         </div>
       )}
       
-      {/* Phase 7 - Final */}
+      {/* Phase 7 - Personal message */}
       {currentPhase === 7 && (
+        <div className="flex flex-col items-center justify-center gap-6 px-6 max-w-2xl text-center">
+          <PhaseText
+            text={`And I want you to know this:<br/><br/>
+I’m genuinely happy you exist.<br/>
+Proud of who you are becoming,<br/>
+even on days you doubt it.<br/><br/>
+You matter more than you think.<br/>
+And I don’t just celebrate your birthday—<br/>
+I celebrate you.<br/>
+I hope you stay.<br/>
+Not just here… but in my life.`}
+            isVisible={true}
+            variant="default"
+          />
+        </div>
+      )}
+      
+      {/* Phase 8 - Final */}
+      {currentPhase === 8 && (
         <div className="flex flex-col items-center justify-center gap-4 px-4">
           <PhaseText
             text={t('final1', language)}
@@ -275,8 +295,8 @@ export const ExperiencePhases = ({
         </div>
       )}
       
-      {/* Phase 8 - Floating Images Finale */}
-      {currentPhase === 8 && (
+      {/* Phase 9 - Floating Images Finale */}
+      {currentPhase === 9 && (
         <>
           <FloatingImages
             images={config.images}
