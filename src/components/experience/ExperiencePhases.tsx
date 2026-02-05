@@ -58,15 +58,10 @@ export const ExperiencePhases = ({
     return () => clearTimeout(timer);
   }, [isStarted, currentPhase, config.timings, audio]);
 
-  // Phase 1 - Optionally start ambient audio.
-  // Landing page now starts a global track; to avoid double music,
-  // we only start ambient if no audio is currently playing.
+  // Phase 1 - (ambient audio disabled; landing music now owns the session track)
   useEffect(() => {
-    if (!isStarted || currentPhase !== 1) return;
-    if (!audio.audioState.isPlaying) {
-      audio.playAmbient(config.audio.ambient);
-    }
-  }, [isStarted, currentPhase, audio, audio.audioState.isPlaying, config.audio.ambient]);
+    return;
+  }, [isStarted, currentPhase, audio, config.audio.ambient]);
   
   // Phase 1 - Show buttons after delay
   useEffect(() => {

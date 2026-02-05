@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LanguageSwitcher } from '@/components/experience/LanguageSwitcher';
 import { ExperiencePhases } from '@/components/experience/ExperiencePhases';
@@ -19,6 +19,7 @@ const Index = () => {
   const [hasEnteredExperience, setHasEnteredExperience] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [landingTrack, setLandingTrack] = useState<string | undefined>(undefined);
+  const landingAudioRef = useRef<HTMLAudioElement | null>(null);
   const audio = useAudioManager();
   
   // Update document direction for RTL languages
@@ -54,13 +55,8 @@ const Index = () => {
     if (MUSIC_TRACKS.length > 0) {
       const random = MUSIC_TRACKS[Math.floor(Math.random() * MUSIC_TRACKS.length)];
       setLandingTrack(random);
-      audio.preloadAudio({
-        celebration: random,
-        ambient: config.audio.ambient,
-        heartbeat: config.audio.heartbeat,
-      });
     }
-  }, [audio, config.audio.ambient, config.audio.heartbeat]);
+  }, []);
 
   // Handle language change
   const handleLanguageChange = (lang: 'en' | 'ar' | 'ru') => {
@@ -81,7 +77,14 @@ const Index = () => {
     }
 
     // Start happy track directly on user gesture (plays for whole visit)
-    audio.playCelebration(landingTrack || config.audio.celebration);
+    if (landingAudioRef.current) {
+      const playPromise = landingAudioRef.current.play();
+      if (playPromise && playPromise.catch) {
+        playPromise.catch(() => {
+          // ignore autoplay errors
+        });
+      }
+    }
 
     // Short visual transition, then hand off to Phase 1
     setTimeout(() => {
@@ -91,6 +94,10 @@ const Index = () => {
   
   // Handle exit to normal birthday
   const handleExit = () => {
+    if (landingAudioRef.current) {
+      landingAudioRef.current.pause();
+      landingAudioRef.current.currentTime = 0;
+    }
     audio.stopAll();
     navigate('/normal-birthday');
   };
@@ -110,6 +117,10 @@ const Index = () => {
       {/* Landing gateway */}
       {!hasEnteredExperience && (
         <div className="relative flex min-h-screen flex-col items-center justify-center px-6">
+          {/* Hidden audio element for landing music */}
+          {landingTrack && (
+            <audio ref={landingAudioRef} src={landingTrack} loop />
+          )}
           {/* Background celebration video */}
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
             <video
