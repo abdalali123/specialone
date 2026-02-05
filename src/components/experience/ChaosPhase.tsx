@@ -20,6 +20,9 @@ interface Particle {
 interface Balloon {
   id: number;
   x: number;
+  size: number;
+  driftX: number;
+  duration: number;
   color: string;
   delay: number;
 }
@@ -71,9 +74,12 @@ export const ChaosPhase = ({ language, isActive }: ChaosPhaseProps) => {
     setConfetti(newConfetti);
     
     // Generate balloons
-    const newBalloons: Balloon[] = Array.from({ length: 12 }, (_, i) => ({
+    const newBalloons: Balloon[] = Array.from({ length: 16 }, (_, i) => ({
       id: i,
       x: 5 + Math.random() * 90,
+      size: 26 + Math.random() * 46,
+      driftX: -40 + Math.random() * 80,
+      duration: 8 + Math.random() * 8,
       color: BALLOON_COLORS[Math.floor(Math.random() * BALLOON_COLORS.length)],
       delay: Math.random() * 3,
     }));
@@ -150,9 +156,13 @@ export const ChaosPhase = ({ language, isActive }: ChaosPhaseProps) => {
           className="balloon animate-balloon"
           style={{
             left: `${balloon.x}%`,
-            bottom: '20%',
+            bottom: '-25%',
+            width: `${balloon.size}px`,
+            height: `${balloon.size * 1.25}px`,
             backgroundColor: balloon.color,
             animationDelay: `${balloon.delay}s`,
+            animationDuration: `${balloon.duration}s`,
+            '--drift-x': `${balloon.driftX}px`,
           }}
         />
       ))}

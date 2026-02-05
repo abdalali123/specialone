@@ -4,6 +4,7 @@ import { LanguageSwitcher } from '@/components/experience/LanguageSwitcher';
 import { TapOverlay } from '@/components/experience/TapOverlay';
 import { ExperiencePhases } from '@/components/experience/ExperiencePhases';
 import { defaultConfig, ExperienceConfig } from '@/config/experience';
+import { useAudioManager } from '@/hooks/useAudioManager';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ const Index = () => {
   const [language, setLanguage] = useState<'en' | 'ar' | 'ru'>('en');
   const [isStarted, setIsStarted] = useState(false);
   const [showTapOverlay, setShowTapOverlay] = useState(true);
+  const audio = useAudioManager();
   
   // Update document direction for RTL languages
   useEffect(() => {
@@ -39,6 +41,11 @@ const Index = () => {
       console.log('No saved config found');
     }
   }, []);
+
+  // Preload audio when config changes
+  useEffect(() => {
+    audio.preloadAudio(config.audio);
+  }, [audio, config.audio]);
   
   // Handle language change
   const handleLanguageChange = (lang: 'en' | 'ar' | 'ru') => {
@@ -50,10 +57,15 @@ const Index = () => {
   const handleStart = () => {
     setShowTapOverlay(false);
     setIsStarted(true);
+
+    // IMPORTANT: Start audio directly on the user gesture (tap/click),
+    // otherwise many browsers will block autoplay.
+    audio.playCelebration(config.audio.celebration);
   };
   
   // Handle exit to normal birthday
   const handleExit = () => {
+    audio.stopAll();
     navigate('/normal-birthday');
   };
   
@@ -84,6 +96,7 @@ const Index = () => {
           language={language}
           isStarted={isStarted}
           onExit={handleExit}
+          audio={audio}
         />
       )}
       

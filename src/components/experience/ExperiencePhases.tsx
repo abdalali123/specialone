@@ -4,7 +4,7 @@ import { PhaseText } from './PhaseText';
 import { ChoiceButtons } from './ChoiceButtons';
 import { FloatingImages } from './FloatingImages';
 import { t, getCurrentTime, ExperienceConfig } from '@/config/experience';
-import { useAudioManager } from '@/hooks/useAudioManager';
+import type { useAudioManager } from '@/hooks/useAudioManager';
 
 type Phase = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
@@ -13,6 +13,7 @@ interface ExperiencePhasesProps {
   language: 'en' | 'ar' | 'ru';
   isStarted: boolean;
   onExit: () => void;
+  audio: ReturnType<typeof useAudioManager>;
 }
 
 export const ExperiencePhases = ({
@@ -20,26 +21,24 @@ export const ExperiencePhases = ({
   language,
   isStarted,
   onExit,
+  audio,
 }: ExperiencePhasesProps) => {
   const [currentPhase, setCurrentPhase] = useState<Phase>(0);
   const [userChoice, setUserChoice] = useState<'yes' | 'no' | null>(null);
   const [showButtons, setShowButtons] = useState(false);
   const [textSequence, setTextSequence] = useState(0);
   const [isCutActive, setIsCutActive] = useState(false);
-  
-  const audio = useAudioManager();
-  
-  // Preload audio on mount
+
+  // Stop all audio when this experience unmounts
   useEffect(() => {
-    audio.preloadAudio(config.audio);
-  }, [config.audio]);
+    return () => {
+      audio.stopAll();
+    };
+  }, [audio]);
   
   // Phase 0 - Chaos
   useEffect(() => {
     if (!isStarted || currentPhase !== 0) return;
-    
-    // Start celebration audio
-    audio.playCelebration(config.audio.celebration);
     
     // After phase0 duration, trigger the cut
     const timer = setTimeout(() => {
@@ -56,6 +55,12 @@ export const ExperiencePhases = ({
     
     return () => clearTimeout(timer);
   }, [isStarted, currentPhase, config.timings, audio]);
+
+  // Phase 1 - Start calm ambient/piano as soon as we enter
+  useEffect(() => {
+    if (!isStarted || currentPhase !== 1) return;
+    audio.playAmbient(config.audio.ambient);
+  }, [isStarted, currentPhase, audio, config.audio.ambient]);
   
   // Phase 1 - Show buttons after delay
   useEffect(() => {
@@ -73,9 +78,6 @@ export const ExperiencePhases = ({
     setUserChoice(choice);
     setShowButtons(false);
     setCurrentPhase(2);
-    
-    // Start ambient audio
-    audio.playAmbient(config.audio.ambient);
   }, [audio, config.audio.ambient]);
   
   // Phase progression

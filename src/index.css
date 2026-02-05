@@ -173,11 +173,11 @@
   
   /* Chaos phase elements */
   .chaos-gradient {
-    background: radial-gradient(
-      ellipse at 50% 50%,
-      hsl(var(--bg-2)),
-      hsl(var(--bg-1)) 70%
-    );
+    background:
+      radial-gradient(circle at 25% 25%, hsl(var(--accent-cyan) / 0.16), transparent 55%),
+      radial-gradient(circle at 75% 70%, hsl(var(--accent-magenta) / 0.14), transparent 60%),
+      radial-gradient(circle at 55% 35%, hsl(var(--accent-gold) / 0.10), transparent 62%),
+      radial-gradient(ellipse at 50% 50%, hsl(var(--bg-2)), hsl(var(--bg-1)) 70%);
   }
   
   .neon-streak {
@@ -399,11 +399,16 @@
 }
 
 @keyframes balloon-float {
-  0%, 100% {
-    transform: translateY(0) rotate(-5deg);
+  0% {
+    transform: translateY(0) translateX(0) rotate(-8deg);
+    opacity: 0;
   }
-  50% {
-    transform: translateY(-30px) rotate(5deg);
+  10% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateY(-140vh) translateX(var(--drift-x, 40px)) rotate(10deg);
+    opacity: 0;
   }
 }
 
