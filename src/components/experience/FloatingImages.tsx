@@ -26,38 +26,36 @@ export const FloatingImages = ({ images, isVisible, enableGyro }: FloatingImages
   const [floatingImages, setFloatingImages] = useState<FloatingImage[]>([]);
   const [draggingId, setDraggingId] = useState<number | null>(null);
   const gyro = useGyroscope(enableGyro);
-  
+
   useEffect(() => {
     if (!isVisible || images.length === 0) return;
-    
-    // Create floating image objects with unique drift patterns
+
     const newImages: FloatingImage[] = images.map((src, i) => ({
       id: i,
       src,
-      x: 15 + Math.random() * 70,
-      y: 15 + Math.random() * 60,
-      size: 140 + Math.random() * 80,
-      rotation: -12 + Math.random() * 24,
-      delay: i * 0.8,
-      depth: 0.4 + Math.random() * 0.6,
+      x: 10 + Math.random() * 80,
+      y: 10 + Math.random() * 70,
+      size: 120 + Math.random() * 100,
+      rotation: -15 + Math.random() * 30,
+      delay: i * 0.5,
+      depth: 0.3 + Math.random() * 0.7,
       driftX: -20 + Math.random() * 40,
-      driftY: -15 + Math.random() * 30,
-      floatDuration: 12 + Math.random() * 8,
+      driftY: -20 + Math.random() * 40,
+      floatDuration: 10 + Math.random() * 10,
     }));
-    
+
     setFloatingImages(newImages);
   }, [images, isVisible]);
-  
+
   if (!isVisible || floatingImages.length === 0) return null;
-  
+
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none z-10">
       {floatingImages.map((img) => {
-        // Parallax offset based on gyroscope/mouse
         const parallaxX = gyro.x * 40 * img.depth;
         const parallaxY = gyro.y * 25 * img.depth;
         const isDragging = draggingId === img.id;
-        
+
         return (
           <div
             key={img.id}
@@ -74,9 +72,7 @@ export const FloatingImages = ({ images, isVisible, enableGyro }: FloatingImages
               (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
               setDraggingId(null);
             }}
-            onPointerCancel={() => {
-              setDraggingId(null);
-            }}
+            onPointerCancel={() => setDraggingId(null)}
             onPointerMove={(e) => {
               if (draggingId !== img.id) return;
               const vw = window.innerWidth || 1;
@@ -94,74 +90,36 @@ export const FloatingImages = ({ images, isVisible, enableGyro }: FloatingImages
               top: `${img.y}%`,
               width: `${img.size}px`,
               height: `${img.size * 0.75}px`,
-              transform: `
-                translate(-50%, -50%)
-                translate(${parallaxX}px, ${parallaxY}px)
-                rotate(${img.rotation}deg)
+              transform: `translate(-50%, -50%) translate(${parallaxX}px, ${parallaxY}px) rotate(${img.rotation}deg)`,
+              opacity: 1,
+              animation: `
+                floating-drift ${img.floatDuration}s ease-in-out ${img.delay}s infinite alternate
               `,
-              opacity: 0,
-              animation: isDragging
-                ? `floating-image-enter 2.5s cubic-bezier(0.4, 0, 0.2, 1) ${img.delay}s forwards`
-                : `
-                floating-image-enter 2.5s cubic-bezier(0.4, 0, 0.2, 1) ${img.delay}s forwards,
-                floating-drift ${img.floatDuration}s ease-in-out ${img.delay + 2}s infinite alternate
-              `,
-              boxShadow: `
-                0 25px 50px -12px rgba(0, 0, 0, 0.5),
-                0 0 80px rgba(246, 248, 250, 0.05)
-              `,
-              '--drift-x': `${img.driftX}px`,
-              '--drift-y': `${img.driftY}px`,
-            } as React.CSSProperties}
+            }}
           >
-            {/* Soft halo glow */}
-            <div
-              className="absolute -inset-8 -z-10"
+            {/* Soft halo */}
+            <div className="absolute -inset-8 -z-10"
               style={{
-                background: `radial-gradient(
-                  ellipse at center,
-                  hsl(210 33% 97% / 0.08) 0%,
-                  hsl(186 100% 50% / 0.03) 40%,
-                  transparent 70%
-                )`,
+                background: `radial-gradient(ellipse at center, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 40%, transparent 70%)`,
                 filter: 'blur(30px)',
               }}
             />
-            
-            {/* Image container with subtle border */}
-            <div 
-              className="relative w-full h-full overflow-hidden rounded-sm"
-              style={{
-                border: '1px solid rgba(246, 248, 250, 0.1)',
-              }}
+            <div className="relative w-full h-full overflow-hidden rounded-sm"
+              style={{ border: '1px solid rgba(246,248,250,0.1)' }}
             >
-              <img
-                src={img.src}
-                alt=""
-                className="w-full h-full object-cover"
-                style={{
-                  filter: `blur(${0.3 * (1 - img.depth)}px) saturate(1.1)`,
-                }}
+              <img src={img.src} alt="" className="w-full h-full object-cover"
+                style={{ filter: `blur(${0.3 * (1 - img.depth)}px) saturate(1.1)` }}
                 loading="lazy"
               />
-              
-              {/* Overlay gradient for depth */}
-              <div 
-                className="absolute inset-0"
-                style={{
-                  background: `linear-gradient(
-                    135deg,
-                    transparent 0%,
-                    rgba(0, 0, 0, 0.1) 100%
-                  )`,
-                }}
+              <div className="absolute inset-0"
+                style={{ background: `linear-gradient(135deg, transparent 0%, rgba(0,0,0,0.1) 100%)` }}
               />
             </div>
           </div>
         );
       })}
-      
-      {/* Ambient floating particles */}
+
+      {/* Ambient particles */}
       <div className="absolute inset-0">
         {Array.from({ length: 20 }).map((_, i) => (
           <div
@@ -173,11 +131,8 @@ export const FloatingImages = ({ images, isVisible, enableGyro }: FloatingImages
               width: `${2 + Math.random() * 3}px`,
               height: `${2 + Math.random() * 3}px`,
               background: 'hsl(210 33% 97% / 0.3)',
-              opacity: 0,
-              animation: `
-                particle-float ${15 + Math.random() * 10}s ease-in-out ${Math.random() * 5}s infinite,
-                fade-in 2s ${Math.random() * 3}s forwards
-              `,
+              opacity: 1,
+              animation: `particle-float ${15 + Math.random() * 10}s ease-in-out ${Math.random() * 5}s infinite alternate`,
             }}
           />
         ))}

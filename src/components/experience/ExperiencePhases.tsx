@@ -28,75 +28,48 @@ export const ExperiencePhases = ({
   const [currentPhase, setCurrentPhase] = useState<Phase>(initialPhase);
   const [userChoice, setUserChoice] = useState<'yes' | 'no' | null>(null);
   const [showButtons, setShowButtons] = useState(false);
-  const [textSequence, setTextSequence] = useState(0);
   const [isCutActive, setIsCutActive] = useState(false);
 
-  // Stop all audio when this experience unmounts
+  // Stop all audio when unmounting
   useEffect(() => {
-    return () => {
-      audio.stopAll();
-    };
+    return () => audio.stopAll();
   }, [audio]);
-  
+
   // Phase 0 - Chaos
   useEffect(() => {
     if (!isStarted || currentPhase !== 0) return;
-    
-    // After phase0 duration, trigger the cut
+
     const timer = setTimeout(() => {
-      // HARD CUT - immediate stop
       audio.stopCelebration();
       setIsCutActive(true);
-      
-      // After silence, move to phase 1
+
       setTimeout(() => {
         setIsCutActive(false);
         setCurrentPhase(1);
       }, config.timings.cut);
     }, config.timings.phase0);
-    
+
     return () => clearTimeout(timer);
   }, [isStarted, currentPhase, config.timings, audio]);
 
-  // Phase 1 - (ambient audio disabled; landing music now owns the session track)
-  useEffect(() => {
-    return;
-  }, [isStarted, currentPhase, audio, config.audio.ambient]);
-  
-  // Phase 1 - Show buttons after delay
+  // Phase 1 - Show buttons
   useEffect(() => {
     if (currentPhase !== 1) return;
-    
-    const timer = setTimeout(() => {
-      setShowButtons(true);
-    }, config.timings.btnDelay);
-    
+
+    const timer = setTimeout(() => setShowButtons(true), config.timings.btnDelay);
     return () => clearTimeout(timer);
   }, [currentPhase, config.timings.btnDelay]);
-  
-  // Handle user choice
+
   const handleChoice = useCallback((choice: 'yes' | 'no') => {
     setUserChoice(choice);
     setShowButtons(false);
     setCurrentPhase(2);
-  }, [audio, config.audio.ambient]);
-  
-  // Phase progression
+  }, []);
+
+  // Auto-phase progression (2 → 8)
   useEffect(() => {
-    if (currentPhase < 2 || currentPhase >= 9) return;
-    
-    // Auto-progress through phases with text sequences
-    const progressPhase = () => {
-      if (currentPhase < 8) {
-        setCurrentPhase((prev) => (prev + 1) as Phase);
-        setTextSequence(0);
-      } else if (currentPhase === 8) {
-        // Final phase - show images
-        setCurrentPhase(9);
-      }
-    };
-    
-    // Different timing per phase
+    if (currentPhase < 2 || currentPhase > 8) return;
+
     const phaseDurations: Record<number, number> = {
       2: 6000,
       3: 10000,
@@ -106,43 +79,26 @@ export const ExperiencePhases = ({
       7: 18000,
       8: 8000,
     };
-    
-    const timer = setTimeout(progressPhase, phaseDurations[currentPhase] || 6000);
-    
+
+    const timer = setTimeout(() => {
+      setCurrentPhase((prev) => (prev < 8 ? (prev + 1) as Phase : 9));
+    }, phaseDurations[currentPhase] || 6000);
+
     return () => clearTimeout(timer);
   }, [currentPhase]);
-  
-  // Phase 5 - Reinterpret
-  // (We no longer restart celebration audio here to keep one continuous track.)
-  
-  // Get replacement values
-  const replacements = {
-    name: config.name,
-    time: getCurrentTime(),
-  };
-  
+
+  const replacements = { name: config.name, time: getCurrentTime() };
+
   return (
-    <div
-      className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden bg-black text-white"
-      style={isCutActive ? { background: 'hsl(0 0% 0%)' } : undefined}
-    >
-      {/* Phase 0 - Chaos */}
-      {currentPhase === 0 && !isCutActive && (
-        <ChaosPhase language={language} isActive={true} />
-      )}
-      
-      {/* Cut - Pure black, silence */}
+    <div className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden bg-black text-white">
+      {/* Phase 0 */}
+      {currentPhase === 0 && !isCutActive && <ChaosPhase language={language} isActive={true} />}
       {isCutActive && <div className="fixed inset-0 bg-black" aria-hidden="true" />}
-      
-      {/* Phase 1 - Core Question */}
+
+      {/* Phase 1 */}
       {currentPhase === 1 && (
         <div className="flex flex-col items-center justify-center px-4">
-          <PhaseText
-            text={t('coreQuestion', language)}
-            isVisible={true}
-            variant="large"
-          />
-          
+          <PhaseText text={t('coreQuestion', language)} isVisible={true} variant="large" />
           <ChoiceButtons
             choice1Text={t('choice1', language)}
             choice2Text={t('choice2', language)}
@@ -154,158 +110,84 @@ export const ExperiencePhases = ({
           />
         </div>
       )}
-      
-      {/* Phase 2 - Emotional Path */}
-      {currentPhase === 2 && userChoice && (
-        <div className="flex flex-col items-center justify-center gap-8 px-4">
-          <PhaseText
-            text={userChoice === 'yes' ? t('mirror1Yes', language) : t('mirror1No', language)}
-            isVisible={true}
-            variant="default"
-          />
-          <PhaseText
-            text={userChoice === 'yes' ? t('mirror2Yes', language) : t('mirror2No', language)}
-            isVisible={true}
-            variant="small"
-            delay={2500}
-          />
+
+      {/* Phase 2 → 8 */}
+      {currentPhase >= 2 && currentPhase <= 8 && (
+        <div className="flex flex-col items-center justify-center gap-6 px-4 text-center max-w-2xl">
+          {currentPhase === 2 && userChoice && (
+            <>
+              <PhaseText
+                text={userChoice === 'yes' ? t('mirror1Yes', language) : t('mirror1No', language)}
+                isVisible
+                variant="default"
+              />
+              <PhaseText
+                text={userChoice === 'yes' ? t('mirror2Yes', language) : t('mirror2No', language)}
+                isVisible
+                variant="small"
+                delay={2500}
+              />
+            </>
+          )}
+
+          {currentPhase === 3 && (
+            <>
+              <PhaseText text={t('timeAwareness', language, replacements)} isVisible variant="default" />
+              <PhaseText text={t('time1', language)} isVisible variant="small" delay={2000} glitchWords={['time', 'время', 'وقت']} />
+              <PhaseText text={t('time2', language)} isVisible variant="small" delay={4000} glitchWords={['choice', 'выбор', 'خيار']} />
+              <PhaseText text={t('time3', language)} isVisible variant="small" delay={6000} />
+            </>
+          )}
+
+          {currentPhase === 4 && (
+            <>
+              <PhaseText text={t('childhood1', language)} isVisible variant="default" />
+              <PhaseText text={t('childhood2', language)} isVisible variant="small" delay={3000} />
+            </>
+          )}
+
+          {currentPhase === 5 && <PhaseText text={t('reinterpret', language)} isVisible variant="large" />}
+
+          {currentPhase === 6 && (
+            <>
+              <PhaseText text={t('author1', language)} isVisible variant="default" />
+              <PhaseText text={t('author2', language)} isVisible variant="small" delay={2500} />
+              <PhaseText text={t('author3', language)} isVisible variant="small" delay={4500} />
+            </>
+          )}
+
+{currentPhase === 7 && (
+  <div className="flex flex-col items-center justify-center gap-4 text-center max-w-xl">
+    {Array.isArray(t('finalParagraph', language)) &&
+      t('finalParagraph', language).map((line, i) => (
+        <PhaseText
+          key={i}
+          text={line}
+          isVisible
+          variant="default"
+          delay={i * 5000} // adjust line reading time
+          duration={4000}  // line disappears after this
+        />
+      ))}
+  </div>
+)}
+
+
+          {currentPhase === 8 && (
+            <>
+              <PhaseText text={t('final1', language)} isVisible variant="large" />
+              <PhaseText text={t('final2', language, replacements)} isVisible variant="large" delay={1500} />
+            </>
+          )}
         </div>
       )}
-      
-      {/* Phase 3 - Time Awareness */}
-      {currentPhase === 3 && (
-        <div className="flex flex-col items-center justify-center gap-6 px-4">
-          <PhaseText
-            text={t('timeAwareness', language, replacements)}
-            isVisible={true}
-            variant="default"
-          />
-          <PhaseText
-            text={t('time1', language)}
-            isVisible={true}
-            variant="small"
-            delay={2000}
-            glitchWords={['time', 'время', 'وقت']}
-          />
-          <PhaseText
-            text={t('time2', language)}
-            isVisible={true}
-            variant="small"
-            delay={4000}
-            glitchWords={['choice', 'выбор', 'خيار']}
-          />
-          <PhaseText
-            text={t('time3', language)}
-            isVisible={true}
-            variant="small"
-            delay={6000}
-          />
-        </div>
-      )}
-      
-      {/* Phase 4 - Childhood */}
-      {currentPhase === 4 && (
-        <div className="flex flex-col items-center justify-center gap-8 px-4">
-          <PhaseText
-            text={t('childhood1', language)}
-            isVisible={true}
-            variant="default"
-          />
-          <PhaseText
-            text={t('childhood2', language)}
-            isVisible={true}
-            variant="small"
-            delay={3000}
-          />
-        </div>
-      )}
-      
-      {/* Phase 5 - Reinterpret */}
-      {currentPhase === 5 && (
-        <div className="flex flex-col items-center justify-center px-4">
-          <PhaseText
-            text={t('reinterpret', language)}
-            isVisible={true}
-            variant="large"
-          />
-        </div>
-      )}
-      
-      {/* Phase 6 - Author Presence */}
-      {currentPhase === 6 && (
-        <div className="flex flex-col items-center justify-center gap-6 px-4">
-          <PhaseText
-            text={t('author1', language)}
-            isVisible={true}
-            variant="default"
-          />
-          <PhaseText
-            text={t('author2', language)}
-            isVisible={true}
-            variant="small"
-            delay={2500}
-          />
-          <PhaseText
-            text={t('author3', language)}
-            isVisible={true}
-            variant="small"
-            delay={4500}
-          />
-        </div>
-      )}
-      
-      {/* Phase 7 - Personal message */}
-      {currentPhase === 7 && (
-        <div className="flex flex-col items-center justify-center gap-6 px-6 max-w-2xl text-center">
-          <PhaseText
-            text={`And I want you to know this:<br/><br/>
-I’m genuinely happy you exist.<br/>
-Proud of who you are becoming,<br/>
-even on days you doubt it.<br/><br/>
-You matter more than you think.<br/>
-And I don’t just celebrate your birthday—<br/>
-I celebrate you.<br/>
-I hope you stay.<br/>
-Not just here… but in my life.`}
-            isVisible={true}
-            variant="default"
-          />
-        </div>
-      )}
-      
-      {/* Phase 8 - Final */}
-      {currentPhase === 8 && (
-        <div className="flex flex-col items-center justify-center gap-4 px-4">
-          <PhaseText
-            text={t('final1', language)}
-            isVisible={true}
-            variant="large"
-          />
-          <PhaseText
-            text={t('final2', language, replacements)}
-            isVisible={true}
-            variant="large"
-            delay={1500}
-          />
-        </div>
-      )}
-      
-      {/* Phase 9 - Floating Images Finale */}
+
+      {/* Phase 9 - Floating Images */}
       {currentPhase === 9 && (
         <>
-          <FloatingImages
-            images={config.images}
-            isVisible={true}
-            enableGyro={config.enableGyro}
-          />
-          
+          <FloatingImages images={config.images} isVisible enableGyro={config.enableGyro} />
           <div className="fixed bottom-20 left-0 right-0 flex justify-center px-4 z-20">
-            <PhaseText
-              text={t('aftertaste', language)}
-              isVisible={true}
-              variant="small"
-              delay={2000}
-            />
+            <PhaseText text={t('aftertaste', language)} isVisible variant="small" delay={2000} />
           </div>
         </>
       )}
