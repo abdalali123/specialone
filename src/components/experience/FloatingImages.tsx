@@ -33,15 +33,15 @@ export const FloatingImages = ({ images, isVisible, enableGyro }: FloatingImages
     const newImages: FloatingImage[] = images.map((src, i) => ({
       id: i,
       src,
-      x: 10 + Math.random() * 80,
-      y: 10 + Math.random() * 70,
-      size: 120 + Math.random() * 100,
-      rotation: -15 + Math.random() * 30,
+      x: 5 + Math.random() * 90, // ensures images stay inside viewport
+      y: 5 + Math.random() * 85,
+      size: 100 + Math.random() * 120, // 100–220px
+      rotation: -20 + Math.random() * 40,
       delay: i * 0.5,
       depth: 0.3 + Math.random() * 0.7,
-      driftX: -20 + Math.random() * 40,
-      driftY: -20 + Math.random() * 40,
-      floatDuration: 10 + Math.random() * 10,
+      driftX: -25 + Math.random() * 50,
+      driftY: -25 + Math.random() * 50,
+      floatDuration: 8 + Math.random() * 10,
     }));
 
     setFloatingImages(newImages);
@@ -89,19 +89,16 @@ export const FloatingImages = ({ images, isVisible, enableGyro }: FloatingImages
               left: `${img.x}%`,
               top: `${img.y}%`,
               width: `${img.size}px`,
-              height: `${img.size * 0.75}px`,
+              height: `${img.size}px`,
               transform: `translate(-50%, -50%) translate(${parallaxX}px, ${parallaxY}px) rotate(${img.rotation}deg)`,
               opacity: 1,
-              animation: `
-                floating-drift ${img.floatDuration}s ease-in-out ${img.delay}s infinite alternate
-              `,
+              animation: `floating-drift ${img.floatDuration}s ease-in-out ${img.delay}s infinite alternate`,
             }}
           >
-            {/* Soft halo */}
-            <div className="absolute -inset-8 -z-10"
+            <div className="absolute -inset-6 -z-10"
               style={{
                 background: `radial-gradient(ellipse at center, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 40%, transparent 70%)`,
-                filter: 'blur(30px)',
+                filter: 'blur(20px)',
               }}
             />
             <div className="relative w-full h-full overflow-hidden rounded-sm"
@@ -118,25 +115,6 @@ export const FloatingImages = ({ images, isVisible, enableGyro }: FloatingImages
           </div>
         );
       })}
-
-      {/* Ambient particles */}
-      <div className="absolute inset-0">
-        {Array.from({ length: 20 }).map((_, i) => (
-          <div
-            key={`particle-${i}`}
-            className="absolute rounded-full"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              width: `${2 + Math.random() * 3}px`,
-              height: `${2 + Math.random() * 3}px`,
-              background: 'hsl(210 33% 97% / 0.3)',
-              opacity: 1,
-              animation: `particle-float ${15 + Math.random() * 10}s ease-in-out ${Math.random() * 5}s infinite alternate`,
-            }}
-          />
-        ))}
-      </div>
     </div>
   );
 };
