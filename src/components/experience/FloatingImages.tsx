@@ -1,205 +1,147 @@
-import { useState, useEffect, useCallback } from 'react';
-import { ChaosPhase } from './ChaosPhase';
-import { PhaseText } from './PhaseText';
-import { ChoiceButtons } from './ChoiceButtons';
-import { FloatingImages } from './FloatingImages';
-import { t, getCurrentTime, ExperienceConfig } from '@/config/experience';
-import { useAudioManager } from '@/hooks/useAudioManager';
+import { useEffect, useState } from 'react';
+import { useGyroscope } from '@/hooks/useGyroscope';
+import { cn } from '@/lib/utils';
 
-type Phase = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
-
-interface ExperiencePhasesProps {
-  config: ExperienceConfig;
-  language: 'en' | 'ar' | 'ru';
-  isStarted: boolean;
-  onExit: () => void;
-  audio: ReturnType<typeof useAudioManager>;
-  initialPhase?: Phase;
+interface FloatingImage {
+  id: number;
+  src: string;
+  x: number;
+  y: number;
+  size: number;
+  rotation: number;
+  delay: number;
+  depth: number;
+  driftX: number;
+  driftY: number;
+  floatDuration: number;
 }
 
-export const ExperiencePhases = ({
-  config,
-  language,
-  isStarted,
-  onExit,
-  audio,
-  initialPhase = 0,
-}: ExperiencePhasesProps) => {
-  const [currentPhase, setCurrentPhase] = useState<Phase>(initialPhase);
-  const [userChoice, setUserChoice] = useState<'yes' | 'no' | null>(null);
-  const [showButtons, setShowButtons] = useState(false);
-  const [isCutActive, setIsCutActive] = useState(false);
-  const [paragraphStep, setParagraphStep] = useState(0);
+interface FloatingImagesProps {
+  images: string[];
+  isVisible: boolean;
+  enableGyro: boolean;
+}
 
-  // Stop all audio on unmount
+// ⚡ FIXED: Named export
+export const FloatingImages = ({ images, isVisible, enableGyro }: FloatingImagesProps) => {
+  const [floatingImages, setFloatingImages] = useState<FloatingImage[]>([]);
+  const [draggingId, setDraggingId] = useState<number | null>(null);
+  const gyro = useGyroscope(enableGyro);
+
   useEffect(() => {
-    return () => audio.stopAll();
-  }, [audio]);
+    if (!isVisible || images.length === 0) return;
 
-  // Phase 0 - Chaos
-  useEffect(() => {
-    if (!isStarted || currentPhase !== 0) return;
+    const newImages: FloatingImage[] = images.map((src, i) => ({
+      id: i,
+      src,
+      x: 10 + Math.random() * 80,
+      y: 10 + Math.random() * 70,
+      size: 150 + Math.random() * 50, // ⚡ fixed size to fully show
+      rotation: -15 + Math.random() * 30,
+      delay: i * 0.5,
+      depth: 0.3 + Math.random() * 0.7,
+      driftX: -20 + Math.random() * 40,
+      driftY: -20 + Math.random() * 40,
+      floatDuration: 10 + Math.random() * 10,
+    }));
 
-    const timer = setTimeout(() => {
-      audio.stopCelebration();
-      setIsCutActive(true);
+    setFloatingImages(newImages);
+  }, [images, isVisible]);
 
-      setTimeout(() => {
-        setIsCutActive(false);
-        setCurrentPhase(1);
-      }, config.timings.cut);
-    }, config.timings.phase0);
-
-    return () => clearTimeout(timer);
-  }, [isStarted, currentPhase, config.timings, audio]);
-
-  // Phase 1 - Show buttons
-  useEffect(() => {
-    if (currentPhase !== 1) return;
-    const timer = setTimeout(() => setShowButtons(true), config.timings.btnDelay);
-    return () => clearTimeout(timer);
-  }, [currentPhase, config.timings.btnDelay]);
-
-  const handleChoice = useCallback((choice: 'yes' | 'no') => {
-    setUserChoice(choice);
-    setShowButtons(false);
-    setCurrentPhase(2);
-  }, []);
-
-  // Auto-phase progression (2 → 8)
-  useEffect(() => {
-    if (currentPhase < 2 || currentPhase > 8) return;
-
-    const phaseDurations: Record<number, number> = {
-      2: 6000,
-      3: 10000,
-      4: 7000,
-      5: 6000,
-      6: 8000,
-      7: 2000, // phase 7 handled by paragraph timing
-      8: 8000,
-    };
-
-    const timer = setTimeout(() => {
-      setCurrentPhase((prev) => (prev < 8 ? (prev + 1) as Phase : 9));
-    }, phaseDurations[currentPhase] || 6000);
-
-    return () => clearTimeout(timer);
-  }, [currentPhase]);
-
-  const replacements = { name: config.name, time: getCurrentTime() };
-
-  // Phase 7 paragraph line-by-line
-  const paragraphLines: string[] = t('finalParagraph', language);
-  useEffect(() => {
-    if (currentPhase !== 7) return;
-    setParagraphStep(0);
-
-    const interval = setInterval(() => {
-      setParagraphStep((prev) => {
-        if (prev < paragraphLines.length) return prev + 1;
-        clearInterval(interval);
-        return prev;
-      });
-    }, 3000); // each line stays 3s
-    return () => clearInterval(interval);
-  }, [currentPhase, paragraphLines]);
+  if (!isVisible || floatingImages.length === 0) return null;
 
   return (
-    <div className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden bg-black text-white">
-      {/* Phase 0 */}
-      {currentPhase === 0 && !isCutActive && <ChaosPhase language={language} isActive={true} />}
-      {isCutActive && <div className="fixed inset-0 bg-black" aria-hidden="true" />}
+    <div className="fixed inset-0 overflow-hidden pointer-events-none z-10">
+      {floatingImages.map((img) => {
+        const parallaxX = gyro.x * 40 * img.depth;
+        const parallaxY = gyro.y * 25 * img.depth;
+        const isDragging = draggingId === img.id;
 
-      {/* Phase 1 */}
-      {currentPhase === 1 && (
-        <div className="flex flex-col items-center justify-center px-4">
-          <PhaseText text={t('coreQuestion', language)} isVisible={true} variant="large" />
-          <ChoiceButtons
-            choice1Text={t('choice1', language)}
-            choice2Text={t('choice2', language)}
-            reassuranceText={t('reassurance', language)}
-            exitText={t('exitText', language)}
-            isVisible={showButtons}
-            onChoice={handleChoice}
-            onExit={onExit}
-          />
-        </div>
-      )}
-
-      {/* Phase 2 → 6 */}
-      {currentPhase >= 2 && currentPhase <= 6 && (
-        <div className="flex flex-col items-center justify-center gap-6 px-4 text-center max-w-2xl">
-          {currentPhase === 2 && userChoice && (
-            <>
-              <PhaseText
-                text={userChoice === 'yes' ? t('mirror1Yes', language) : t('mirror1No', language)}
-                isVisible
-                variant="default"
+        return (
+          <div
+            key={img.id}
+            className={cn(
+              'absolute rounded-sm overflow-hidden pointer-events-auto touch-none cursor-grab active:cursor-grabbing',
+              'shadow-2xl'
+            )}
+            onPointerDown={(e) => {
+              e.preventDefault();
+              (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+              setDraggingId(img.id);
+            }}
+            onPointerUp={(e) => {
+              (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+              setDraggingId(null);
+            }}
+            onPointerCancel={() => setDraggingId(null)}
+            onPointerMove={(e) => {
+              if (draggingId !== img.id) return;
+              const vw = window.innerWidth || 1;
+              const vh = window.innerHeight || 1;
+              const newX = (e.clientX / vw) * 100;
+              const newY = (e.clientY / vh) * 100;
+              setFloatingImages((prev) =>
+                prev.map((item) =>
+                  item.id === img.id ? { ...item, x: newX, y: newY } : item
+                )
+              );
+            }}
+            style={{
+              left: `${img.x}%`,
+              top: `${img.y}%`,
+              width: `${img.size}px`,
+              height: `${img.size * 0.75}px`,
+              transform: `translate(-50%, -50%) translate(${parallaxX}px, ${parallaxY}px) rotate(${img.rotation}deg)`,
+              opacity: 1,
+              animation: `floating-drift ${img.floatDuration}s ease-in-out ${img.delay}s infinite alternate`,
+            }}
+          >
+            {/* Soft halo */}
+            <div
+              className="absolute -inset-8 -z-10"
+              style={{
+                background: `radial-gradient(ellipse at center, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 40%, transparent 70%)`,
+                filter: 'blur(30px)',
+              }}
+            />
+            <div
+              className="relative w-full h-full overflow-hidden rounded-sm"
+              style={{ border: '1px solid rgba(246,248,250,0.1)' }}
+            >
+              <img
+                src={img.src}
+                alt=""
+                className="w-full h-full object-cover"
+                style={{ filter: `blur(${0.3 * (1 - img.depth)}px) saturate(1.1)` }}
+                loading="lazy"
               />
-              <PhaseText
-                text={userChoice === 'yes' ? t('mirror2Yes', language) : t('mirror2No', language)}
-                isVisible
-                variant="small"
-                delay={2500}
+              <div
+                className="absolute inset-0"
+                style={{ background: `linear-gradient(135deg, transparent 0%, rgba(0,0,0,0.1) 100%)` }}
               />
-            </>
-          )}
-
-          {currentPhase === 3 && (
-            <>
-              <PhaseText text={t('timeAwareness', language, replacements)} isVisible variant="default" />
-              <PhaseText text={t('time1', language)} isVisible variant="small" delay={2000} />
-              <PhaseText text={t('time2', language)} isVisible variant="small" delay={4000} />
-              <PhaseText text={t('time3', language)} isVisible variant="small" delay={6000} />
-            </>
-          )}
-
-          {currentPhase === 4 && (
-            <>
-              <PhaseText text={t('childhood1', language)} isVisible variant="default" />
-              <PhaseText text={t('childhood2', language)} isVisible variant="small" delay={3000} />
-            </>
-          )}
-
-          {currentPhase === 5 && <PhaseText text={t('reinterpret', language)} isVisible variant="large" />}
-
-          {currentPhase === 6 && (
-            <>
-              <PhaseText text={t('author1', language)} isVisible variant="default" />
-              <PhaseText text={t('author2', language)} isVisible variant="small" delay={2500} />
-              <PhaseText text={t('author3', language)} isVisible variant="small" delay={4500} />
-            </>
-          )}
-        </div>
-      )}
-
-      {/* Phase 7 - Final paragraph line by line */}
-      {currentPhase === 7 && (
-        <div className="flex flex-col items-center justify-center px-4 text-center max-w-2xl gap-2">
-          {paragraphLines.slice(0, paragraphStep).map((line, i) => (
-            <PhaseText key={i} text={line} isVisible variant="default" />
-          ))}
-        </div>
-      )}
-
-      {/* Phase 8 */}
-      {currentPhase === 8 && (
-        <div className="flex flex-col items-center justify-center px-4 text-center max-w-2xl gap-2">
-          <PhaseText text={t('final1', language)} isVisible variant="large" />
-          <PhaseText text={t('final2', language, replacements)} isVisible variant="large" delay={1500} />
-        </div>
-      )}
-
-      {/* Phase 9 - Floating Images */}
-      {currentPhase === 9 && (
-        <>
-          <FloatingImages images={config.images} isVisible enableGyro={config.enableGyro} />
-          <div className="fixed bottom-20 left-0 right-0 flex justify-center px-4 z-20">
-            <PhaseText text={t('aftertaste', language)} isVisible variant="small" delay={2000} />
+            </div>
           </div>
-        </>
-      )}
+        );
+      })}
+
+      {/* Ambient particles */}
+      <div className="absolute inset-0">
+        {Array.from({ length: 20 }).map((_, i) => (
+          <div
+            key={`particle-${i}`}
+            className="absolute rounded-full"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              width: `${2 + Math.random() * 3}px`,
+              height: `${2 + Math.random() * 3}px`,
+              background: 'hsl(210 33% 97% / 0.3)',
+              opacity: 1,
+              animation: `particle-float ${15 + Math.random() * 10}s ease-in-out ${Math.random() * 5}s infinite alternate`,
+            }}
+          />
+        ))}
+      </div>
     </div>
   );
 };
