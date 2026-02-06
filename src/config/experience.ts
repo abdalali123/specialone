@@ -19,14 +19,16 @@ export interface ExperienceConfig {
 }
 
 export const defaultConfig: ExperienceConfig = {
-  name: "Daria",
+  name: "Daria", // <-- change the name here
   language: "en",
   birthdayDate: new Date().toISOString(),
   images: [
-    "/images/memory-1.jpg",
-    "/images/memory-2.jpg",
-    "/images/memory-3.jpg",
-    "/images/memory-4.jpg"
+    "/images/1.png",
+    "/images/2.png",
+    "/images/3.png",
+    "/images/4.png",
+    "/images/5.png",
+    "/images/6.png"
   ],
   timings: {
     phase0: 6000,
@@ -48,7 +50,7 @@ export const langTexts = {
     chaos1: "HAPPY BIRTHDAY!",
     chaos2: "🎉 CELEBRATE! 🎊",
     stayHint: "Stay. It changes.",
-    coreQuestion: "But do you actually feel celebrated?",
+    coreQuestion: " do you actually feel celebrated?",
     choice1: "Yes, I do",
     choice2: "Not really",
     reassurance: "There's no right answer here.",
@@ -71,7 +73,7 @@ export const langTexts = {
     final2: "{name}.",
     aftertaste: "The rest is yours.",
     finalParagraph: [
-      "And I want you to know this:",
+      "And I want you to know this",
       "I’m genuinely happy you exist.",
       "Proud of who you are becoming,",
       "even on days you doubt it.",
@@ -88,7 +90,7 @@ export const langTexts = {
     chaos1: "!عيد ميلاد سعيد",
     chaos2: "🎉 احتفل! 🎊",
     stayHint: ".ابقَ. سيتغير",
-    coreQuestion: "لكن هل تشعر فعلاً بالاحتفاء بك؟",
+    coreQuestion: " هل تشعر فعلاً بالاحتفاء بك؟",
     choice1: "نعم، أشعر",
     choice2: "ليس حقاً",
     reassurance: ".لا توجد إجابة صحيحة هنا",
@@ -111,7 +113,7 @@ export const langTexts = {
     final2: ".{name}",
     aftertaste: ".الباقي لك",
     finalParagraph: [
-      "وأريدك أن تعرف هذا:",
+      "وأريدك أن تعرف هذا",
       "أنا سعيد حقًا بوجودك.",
       "فخور بما تصبح عليه،",
       "حتى في الأيام التي تشك فيها.",
@@ -128,7 +130,7 @@ export const langTexts = {
     chaos1: "С ДНЁМ РОЖДЕНИЯ!",
     chaos2: "🎉 ПРАЗДНУЙ! 🎊",
     stayHint: "Останься. Всё изменится.",
-    coreQuestion: "Но чувствуешь ли ты себя по-настоящему отмеченным?",
+    coreQuestion: " чувствуешь ли ты себя по-настоящему отмеченным?",
     choice1: "Да, чувствую",
     choice2: "Не совсем",
     reassurance: "Здесь нет правильного ответа.",
@@ -151,7 +153,7 @@ export const langTexts = {
     final2: "{name}.",
     aftertaste: "Остальное — твоё.",
     finalParagraph: [
-      "И я хочу, чтобы ты это знал:",
+      "И я хочу, чтобы ты это знал",
       "Я искренне рад, что ты существуешь.",
       "Горжусь тем, кем ты становишься,",
       "даже в дни сомнений.",
@@ -171,15 +173,21 @@ export const t = (
   key: keyof typeof langTexts.en,
   lang: 'en' | 'ar' | 'ru' = 'en',
   replacements?: Record<string, string>
-): any => { // returns string or string[]
+): string | string[] => {
   let text = langTexts[lang][key] || langTexts.en[key] || key;
-  
-  if (replacements && typeof text === "string") {
-    Object.entries(replacements).forEach(([k, v]) => {
-      text = text.replace(`{${k}}`, v);
-    });
+
+  if (replacements) {
+    if (Array.isArray(text)) {
+      text = text.map((line) =>
+        Object.entries(replacements).reduce((acc, [k, v]) => acc.replace(`{${k}}`, v), line)
+      );
+    } else {
+      Object.entries(replacements).forEach(([k, v]) => {
+        text = (text as string).replace(`{${k}}`, v);
+      });
+    }
   }
-  
+
   return text;
 };
 
