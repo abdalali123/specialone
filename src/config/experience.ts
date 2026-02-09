@@ -169,11 +169,13 @@ export const langTexts = {
 };
 
 // Translation helper
-export const t = (
+export function t(key: 'finalParagraph', lang?: 'en' | 'ar' | 'ru', replacements?: Record<string, string>): string[];
+export function t(key: Exclude<keyof typeof langTexts.en, 'finalParagraph'>, lang?: 'en' | 'ar' | 'ru', replacements?: Record<string, string>): string;
+export function t(
   key: keyof typeof langTexts.en,
   lang: 'en' | 'ar' | 'ru' = 'en',
   replacements?: Record<string, string>
-): string | string[] => {
+): string | string[] {
   let text = langTexts[lang][key] || langTexts.en[key] || key;
 
   if (replacements) {
@@ -189,7 +191,7 @@ export const t = (
   }
 
   return text;
-};
+}
 
 // Get current time formatted
 export const getCurrentTime = (): string => {

@@ -163,7 +163,7 @@ export const ChaosPhase = ({ language, isActive }: ChaosPhaseProps) => {
             animationDelay: `${balloon.delay}s`,
             animationDuration: `${balloon.duration}s`,
             '--drift-x': `${balloon.driftX}px`,
-          }}
+          } as React.CSSProperties}
         />
       ))}
       
