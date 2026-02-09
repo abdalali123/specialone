@@ -90,7 +90,6 @@ export const FloatingImages = ({ images, isVisible, enableGyro }: FloatingImages
               left: `${img.x}%`,
               top: `${img.y}%`,
               width: `${img.size}px`,
-              height: `${img.size * 0.75}px`,
               transform: `translate(-50%, -50%) translate(${parallaxX}px, ${parallaxY}px) rotate(${img.rotation}deg)`,
               opacity: 1,
               animation: `floating-drift ${img.floatDuration}s ease-in-out ${img.delay}s infinite alternate`,
@@ -105,13 +104,13 @@ export const FloatingImages = ({ images, isVisible, enableGyro }: FloatingImages
               }}
             />
             <div
-              className="relative w-full h-full overflow-hidden rounded-sm"
+              className="relative w-full overflow-hidden rounded-sm"
               style={{ border: '1px solid rgba(246,248,250,0.1)' }}
             >
               <img
                 src={img.src}
                 alt=""
-                className="w-full h-full object-cover"
+                className="w-full h-auto object-contain"
                 style={{ filter: `blur(${0.3 * (1 - img.depth)}px) saturate(1.1)` }}
                 loading="lazy"
               />

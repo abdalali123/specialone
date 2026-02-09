@@ -152,7 +152,9 @@ const NormalBirthday = () => {
         <div className="flex justify-center gap-4 text-3xl md:text-4xl mb-12" style={{
         animation: 'fade-in-up 1s 0.8s both'
       }}>
-          {['🎈', '✨', '🎉', '💫', '🎊'].map((emoji, i) => {})}
+          {['🎈', '✨', '🎉', '💫', '🎊'].map((emoji, i) => (
+            <span key={i} style={{ animation: `emoji-bounce 2s ease-in-out ${i * 0.2}s infinite` }}>{emoji}</span>
+          ))}
         </div>
         
         {/* Message */}

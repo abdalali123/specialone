@@ -158,15 +158,13 @@ export const ExperiencePhases = ({
 
 {currentPhase === 7 && (
   <div className="flex flex-col items-center justify-center gap-4 text-center max-w-xl">
-    {Array.isArray(t('finalParagraph', language)) &&
-      t('finalParagraph', language).map((line, i) => (
+    {t('finalParagraph', language).map((line, i) => (
         <PhaseText
           key={i}
           text={line}
           isVisible
           variant="default"
-          delay={i * 5000} // adjust line reading time
-          duration={4000}  // line disappears after this
+          delay={i * 5000}
         />
       ))}
   </div>
