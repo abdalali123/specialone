@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { ChaosPhase } from './ChaosPhase';
 import { PhaseText } from './PhaseText';
 import { ChoiceButtons } from './ChoiceButtons';
-import { FloatingImages } from './FloatingImages';
 import { t, getCurrentTime, ExperienceConfig } from '@/config/experience';
 import { useAudioManager } from '@/hooks/useAudioManager';
 
@@ -180,10 +179,16 @@ export const ExperiencePhases = ({
         </div>
       )}
 
-      {/* Phase 9 - Floating Images */}
+      {/* Phase 9 - Example image frame */}
       {currentPhase === 9 && (
         <>
-          <FloatingImages images={config.images} isVisible enableGyro={config.enableGyro} />
+          <div className="fixed inset-0 z-10 flex items-center justify-center px-6">
+            <div className="w-full max-w-sm rounded-md border border-white/30 bg-white/5 p-6 text-center shadow-2xl backdrop-blur-sm">
+              <div className="flex aspect-[4/3] w-full items-center justify-center rounded-sm border border-dashed border-white/40 bg-black/20 text-sm uppercase tracking-[0.2em] text-white/90">
+                example
+              </div>
+            </div>
+          </div>
           <div className="fixed bottom-20 left-0 right-0 flex justify-center px-4 z-20">
             <PhaseText text={t('aftertaste', language)} isVisible variant="small" delay={2000} />
           </div>

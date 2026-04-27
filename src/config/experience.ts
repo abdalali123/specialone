@@ -19,7 +19,7 @@ export interface ExperienceConfig {
 }
 
 export const defaultConfig: ExperienceConfig = {
-  name: "Daria", // <-- change the name here
+  name: "العميل", // <-- change the name here
   language: "en",
   birthdayDate: new Date().toISOString(),
   images: [
