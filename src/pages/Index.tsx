@@ -11,8 +11,6 @@ const MUSIC_TRACKS = [
   "/music/goldenhour.mp3",
   "/music/LoveStory.mp3",
   "/music/Skyfall.mp3",
-  "/music/LoveMeNot.mp3",
-  "/music/IWannaBeYours.mp3",
 ];
 
 const Index = () => {

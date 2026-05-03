@@ -38,7 +38,9 @@ export const PhaseText = ({
 
     timeoutRef.current = setTimeout(() => {
       setShouldRender(true);
-      requestAnimationFrame(() => setEntered(true));
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setEntered(true));
+      });
       if (onComplete) {
         completeTimer = setTimeout(onComplete, 1000);
       }
@@ -63,7 +65,11 @@ export const PhaseText = ({
     }
 
     setEntered(false);
-    const t = setTimeout(() => setEntered(true), 420);
+    const t = setTimeout(() => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setEntered(true));
+      });
+    }, 680);
     return () => clearTimeout(t);
   }, [text, shouldRender]);
 
@@ -116,8 +122,8 @@ export const PhaseText = ({
     <div
       className={cn(
         variantClass,
-        'text-center max-w-[90vw] md:max-w-[70vw] px-4 transition-all duration-[var(--duration-text)] ease-[var(--ease-cinematic)] motion-reduce:transition-none motion-reduce:opacity-100',
-        entered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2',
+        'text-center max-w-[90vw] md:max-w-[70vw] px-4 transition-[opacity,transform,filter] duration-[1100ms] [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] motion-reduce:duration-500',
+        entered ? 'opacity-100 translate-y-0 blur-0' : 'opacity-0 translate-y-3 blur-[2px]',
         className
       )}
       dangerouslySetInnerHTML={{ __html: processText() }}

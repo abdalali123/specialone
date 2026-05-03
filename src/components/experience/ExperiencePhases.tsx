@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { ChaosPhase } from './ChaosPhase';
 import { PhaseText } from './PhaseText';
 import { FadeLine } from './FadeLine';
@@ -8,6 +8,16 @@ import { useAudioManager } from '@/hooks/useAudioManager';
 import { saveLoveMessage } from '@/lib/loveApi';
 
 type Phase = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+
+/** Hold each love-letter line longer when the line is long (readable pace + phase timer stays in sync). */
+function estimateLineReadMs(line: string): number {
+  const s = line.trim();
+  const base = 3600;
+  const perChar = 42;
+  const minHold = 4200;
+  const maxHold = 20000;
+  return Math.min(maxHold, Math.max(minHold, base + s.length * perChar));
+}
 
 interface ExperiencePhasesProps {
   config: ExperienceConfig;
@@ -88,20 +98,43 @@ export const ExperiencePhases = ({
     setCurrentPhase(2);
   }, []);
 
-  const finalLines = t('finalParagraph', language) as string[];
+  const finalLines = useMemo(
+    () => t('finalParagraph', language) as string[],
+    [language],
+  );
+  const phase7EndBufferMs = 12000;
+  const phase7TotalReadMs = useMemo(
+    () => finalLines.reduce((sum, line) => sum + estimateLineReadMs(line), 0),
+    [finalLines],
+  );
+
+  const heartKeyframesCss = useMemo(
+    () =>
+      heartParticles
+        .map((h) => {
+          const drift = h.drift;
+          return `@keyframes heart-rise-${h.id} {
+  0% { transform: translate3d(-50%, 12vh, 0) scale(0.88); opacity: 0; }
+  12% { opacity: 0.92; }
+  100% { transform: translate3d(calc(-50% + ${drift}px), -130vh, 0) scale(1.12); opacity: 0; }
+}`;
+        })
+        .join('\n'),
+    [heartParticles],
+  );
 
   // Auto-phase progression (2 → 8)
   useEffect(() => {
     if (currentPhase < 2 || currentPhase > 8) return;
 
     const phaseDurations: Record<number, number> = {
-      2: 6000,
-      3: 10000,
-      4: 7000,
-      5: 6000,
-      6: 8000,
-      7: Math.max(48000, finalLines.length * 3000 + 5000),
-      8: 8000,
+      2: 8200,
+      3: 11500,
+      4: 9200,
+      5: 7800,
+      6: 9800,
+      7: Math.max(90000, phase7TotalReadMs + phase7EndBufferMs),
+      8: 11000,
     };
 
     const timer = setTimeout(() => {
@@ -109,7 +142,7 @@ export const ExperiencePhases = ({
     }, phaseDurations[currentPhase] || 6000);
 
     return () => clearTimeout(timer);
-  }, [currentPhase, finalLines.length]);
+  }, [currentPhase, finalLines.length, phase7TotalReadMs, phase7EndBufferMs]);
 
   const replacements = { name: config.name, time: getCurrentTime() };
   const showLoveBackground = currentPhase >= 7;
@@ -133,12 +166,25 @@ export const ExperiencePhases = ({
       return;
     }
 
-    const interval = setInterval(() => {
-      setPhase7LineIndex((prev) => Math.min(prev + 1, finalLines.length - 1));
-    }, 3000);
+    let lineIndex = 0;
+    let timeoutId: ReturnType<typeof setTimeout>;
 
-    return () => clearInterval(interval);
-  }, [currentPhase, finalLines.length]);
+    const advance = () => {
+      const line = finalLines[lineIndex] ?? '';
+      const delay = estimateLineReadMs(line);
+      timeoutId = window.setTimeout(() => {
+        if (lineIndex >= finalLines.length - 1) return;
+        lineIndex += 1;
+        setPhase7LineIndex(lineIndex);
+        advance();
+      }, delay);
+    };
+
+    setPhase7LineIndex(0);
+    advance();
+
+    return () => window.clearTimeout(timeoutId);
+  }, [currentPhase, finalLines]);
 
   const handleNoPress = () => {
     setNoPressCount((prev) => prev + 1);
@@ -180,25 +226,40 @@ export const ExperiencePhases = ({
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden bg-black text-white">
       {showLoveBackground && (
-        <div className="pointer-events-none absolute inset-0 z-0">
-          {heartParticles.map((heart) => (
-            <span
-              key={`heart-${heart.id}`}
-              className="absolute text-rose-400/80"
-              style={{
-                left: `${heart.left}%`,
-                top: '110%',
-                fontSize: `${heart.size}px`,
-                animation: `love-float ${heart.duration}s linear ${heart.delay}s infinite`,
-                ['--drift' as string]: `${heart.drift}px`,
-                textShadow: '0 0 16px rgba(244,63,94,0.65)',
-                willChange: 'transform, opacity',
-              }}
-            >
-              ❤
-            </span>
-          ))}
-        </div>
+        <>
+          <div className="pointer-events-none absolute inset-0 z-[1] overflow-hidden">
+            {heartParticles.map((heart) => (
+              <span
+                key={`heart-${heart.id}`}
+                className="absolute inline-block text-rose-400/90 [backface-visibility:hidden]"
+                style={{
+                  left: `${heart.left}%`,
+                  bottom: '-6vh',
+                  fontSize: `${heart.size}px`,
+                  animationName: `heart-rise-${heart.id}`,
+                  animationDuration: `${heart.duration}s`,
+                  animationTimingFunction: 'cubic-bezier(0.24, 0.92, 0.32, 0.96)',
+                  animationDelay: `${heart.delay}s`,
+                  animationIterationCount: 'infinite',
+                  animationFillMode: 'both',
+                  textShadow:
+                    '0 0 20px rgba(251,113,133,0.85), 0 0 38px rgba(168,85,247,0.38), 0 0 2px rgba(255,255,255,0.25)',
+                  willChange: 'transform, opacity',
+                }}
+              >
+                ❤
+              </span>
+            ))}
+          </div>
+          <div
+            className="pointer-events-none absolute inset-0 z-[2] animate-[enchant-vignette_12s_ease-in-out_infinite] motion-reduce:animate-none motion-reduce:opacity-[0.5]"
+            style={{
+              background:
+                'radial-gradient(ellipse 85% 70% at 50% 45%, transparent 35%, rgba(20,10,34,0.55) 100%)',
+              mixBlendMode: 'multiply',
+            }}
+          />
+        </>
       )}
 
       {/* Phase 0 */}
@@ -223,7 +284,7 @@ export const ExperiencePhases = ({
 
       {/* Phase 2 → 8 */}
       {currentPhase >= 2 && currentPhase <= 8 && (
-        <div className="relative z-10 flex flex-col items-center justify-center gap-6 px-4 text-center max-w-2xl">
+        <div className="relative z-10 flex flex-col items-center justify-center gap-8 px-4 text-center max-w-2xl [text-shadow:0_0_24px_rgba(255,255,255,0.06)]">
           {currentPhase === 2 && userChoice && (
             <>
               <PhaseText
@@ -266,15 +327,17 @@ export const ExperiencePhases = ({
             </>
           )}
 
-{currentPhase === 7 && (
-  <div className="flex min-h-[30vh] flex-col items-center justify-center text-center max-w-2xl">
-    <FadeLine
-      key={language}
-      text={finalLines[phase7LineIndex] || ''}
-      variantClass="phase-text"
-    />
-  </div>
-)}
+          {currentPhase === 7 && (
+            <div className="flex min-h-[30vh] flex-col items-center justify-center text-center max-w-2xl">
+              <FadeLine
+                key={language}
+                text={finalLines[phase7LineIndex] || ''}
+                variantClass="phase-text drop-shadow-[0_0_30px_rgba(251,113,133,0.12)]"
+                fadeOutMs={720}
+                fadeInMs={980}
+              />
+            </div>
+          )}
 
 
           {currentPhase === 8 && (
@@ -433,18 +496,10 @@ export const ExperiencePhases = ({
       )}
 
       <style>{`
-        @keyframes love-float {
-          0% {
-            transform: translate3d(0, 0, 0) scale(0.9);
-            opacity: 0;
-          }
-          10% {
-            opacity: 0.9;
-          }
-          100% {
-            transform: translate3d(var(--drift, 18px), -140vh, 0) scale(1.2);
-            opacity: 0;
-          }
+        ${heartKeyframesCss}
+        @keyframes enchant-vignette {
+          0%, 100% { opacity: 0.45; transform: scale(1); }
+          50% { opacity: 0.72; transform: scale(1.02); }
         }
         @keyframes love-burst {
           0% {

@@ -15,8 +15,8 @@ interface FadeLineProps {
 export const FadeLine = ({
   text,
   variantClass,
-  fadeOutMs = 380,
-  fadeInMs = 520,
+  fadeOutMs = 640,
+  fadeInMs = 920,
   className,
 }: FadeLineProps) => {
   const [displayText, setDisplayText] = useState(text);
@@ -34,7 +34,7 @@ export const FadeLine = ({
     }, fadeOutMs);
 
     return () => window.clearTimeout(outTimer);
-  }, [text, displayText, fadeOutMs]);
+  }, [text, displayText, fadeOutMs, fadeInMs]);
 
   return (
     <div
@@ -42,8 +42,8 @@ export const FadeLine = ({
       aria-live="polite"
       className={cn(
         variantClass,
-        `text-center max-w-[90vw] md:max-w-[70vw] px-4 transition-[opacity,transform] ease-[var(--ease-cinematic)] motion-reduce:transition-none motion-reduce:opacity-100`,
-        appear ? `opacity-100 translate-y-0 [transition-duration:${fadeInMs}ms]` : `opacity-0 translate-y-1 [transition-duration:${fadeOutMs}ms]`,
+        'text-center max-w-[90vw] md:max-w-[70vw] px-4 transition-[opacity,transform] [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-[opacity,transform] motion-reduce:duration-700',
+        appear ? `opacity-100 translate-y-0 [transition-duration:${fadeInMs}ms]` : `opacity-0 translate-y-1.5 [transition-duration:${fadeOutMs}ms]`,
         className,
       )}
     >
