@@ -75,7 +75,7 @@ export const ExperiencePhases = ({
       4: 7000,
       5: 6000,
       6: 8000,
-      7: 18000,
+      7: 36000,
       8: 8000,
     };
 
@@ -87,9 +87,30 @@ export const ExperiencePhases = ({
   }, [currentPhase]);
 
   const replacements = { name: config.name, time: getCurrentTime() };
+  const showLoveBackground = currentPhase >= 7;
 
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden bg-black text-white">
+      {showLoveBackground && (
+        <div className="pointer-events-none absolute inset-0 z-0">
+          {Array.from({ length: 28 }).map((_, i) => (
+            <span
+              key={`heart-${i}`}
+              className="absolute text-rose-400/80"
+              style={{
+                left: `${(i * 13) % 100}%`,
+                bottom: `-${(i % 6) * 18}px`,
+                fontSize: `${16 + (i % 4) * 6}px`,
+                animation: `love-float ${8 + (i % 5)}s linear ${(i % 7) * 0.7}s infinite`,
+                textShadow: '0 0 16px rgba(244,63,94,0.65)',
+              }}
+            >
+              ❤
+            </span>
+          ))}
+        </div>
+      )}
+
       {/* Phase 0 */}
       {currentPhase === 0 && !isCutActive && <ChaosPhase language={language} isActive={true} />}
       {isCutActive && <div className="fixed inset-0 bg-black" aria-hidden="true" />}
@@ -112,7 +133,7 @@ export const ExperiencePhases = ({
 
       {/* Phase 2 → 8 */}
       {currentPhase >= 2 && currentPhase <= 8 && (
-        <div className="flex flex-col items-center justify-center gap-6 px-4 text-center max-w-2xl">
+        <div className="relative z-10 flex flex-col items-center justify-center gap-6 px-4 text-center max-w-2xl">
           {currentPhase === 2 && userChoice && (
             <>
               <PhaseText
@@ -156,14 +177,14 @@ export const ExperiencePhases = ({
           )}
 
 {currentPhase === 7 && (
-  <div className="flex flex-col items-center justify-center gap-4 text-center max-w-xl">
+  <div className="flex flex-col items-center justify-center gap-4 text-center max-w-2xl">
     {t('finalParagraph', language).map((line, i) => (
         <PhaseText
           key={i}
           text={line}
           isVisible
           variant="default"
-          delay={i * 5000}
+          delay={i * 900}
         />
       ))}
   </div>
@@ -179,21 +200,35 @@ export const ExperiencePhases = ({
         </div>
       )}
 
-      {/* Phase 9 - Example image frame */}
+      {/* Phase 9 - Final love message */}
       {currentPhase === 9 && (
         <>
           <div className="fixed inset-0 z-10 flex items-center justify-center px-6">
-            <div className="w-full max-w-sm rounded-md border border-white/30 bg-white/5 p-6 text-center shadow-2xl backdrop-blur-sm">
-              <div className="flex aspect-[4/3] w-full items-center justify-center rounded-sm border border-dashed border-white/40 bg-black/20 text-sm uppercase tracking-[0.2em] text-white/90">
-                example
-              </div>
-            </div>
-          </div>
-          <div className="fixed bottom-20 left-0 right-0 flex justify-center px-4 z-20">
-            <PhaseText text={t('aftertaste', language)} isVisible variant="small" delay={2000} />
+            <h2
+              className="text-center text-4xl font-extrabold uppercase tracking-[0.2em] text-red-500 sm:text-6xl"
+              style={{ textShadow: '0 0 22px rgba(239,68,68,0.9)' }}
+            >
+              i love you, for ever
+            </h2>
           </div>
         </>
       )}
+
+      <style>{`
+        @keyframes love-float {
+          0% {
+            transform: translateY(0) translateX(0) scale(0.9);
+            opacity: 0;
+          }
+          10% {
+            opacity: 0.9;
+          }
+          100% {
+            transform: translateY(-120vh) translateX(22px) scale(1.2);
+            opacity: 0;
+          }
+        }
+      `}</style>
     </div>
   );
 };
