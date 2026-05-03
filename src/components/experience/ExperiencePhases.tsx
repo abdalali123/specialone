@@ -100,7 +100,7 @@ export const ExperiencePhases = ({
       4: 7000,
       5: 6000,
       6: 8000,
-      7: Math.max(32000, finalLines.length * 1700 + 3500),
+      7: Math.max(48000, finalLines.length * 3000 + 5000),
       8: 8000,
     };
 
@@ -135,7 +135,7 @@ export const ExperiencePhases = ({
 
     const interval = setInterval(() => {
       setPhase7LineIndex((prev) => Math.min(prev + 1, finalLines.length - 1));
-    }, 1700);
+    }, 3000);
 
     return () => clearInterval(interval);
   }, [currentPhase, finalLines.length]);

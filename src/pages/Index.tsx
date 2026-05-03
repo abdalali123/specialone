@@ -11,6 +11,8 @@ const MUSIC_TRACKS = [
   "/music/goldenhour.mp3",
   "/music/LoveStory.mp3",
   "/music/Skyfall.mp3",
+  "/music/LoveMeNot.mp3",
+  "/music/IWannaBeYours.mp3",
 ];
 
 const Index = () => {
@@ -114,7 +116,7 @@ const Index = () => {
       <button
         type="button"
         onClick={() => navigate('/love-vault')}
-        className="fixed right-5 top-5 z-30 rounded-full border border-rose-300/70 bg-rose-500/20 px-4 py-2 text-xl"
+        className="fixed bottom-5 right-5 z-30 rounded-full border border-rose-300/70 bg-rose-500/20 px-4 py-2 text-xl"
         aria-label="Open private love page"
         title="Open private love page"
       >
