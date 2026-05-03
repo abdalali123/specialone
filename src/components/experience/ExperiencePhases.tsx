@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { ChaosPhase } from './ChaosPhase';
 import { PhaseText } from './PhaseText';
+import { FadeLine } from './FadeLine';
 import { ChoiceButtons } from './ChoiceButtons';
 import { t, getCurrentTime, ExperienceConfig } from '@/config/experience';
 import { useAudioManager } from '@/hooks/useAudioManager';
@@ -26,7 +26,6 @@ export const ExperiencePhases = ({
   audio,
   initialPhase = 0,
 }: ExperiencePhasesProps) => {
-  const navigate = useNavigate();
   const [currentPhase, setCurrentPhase] = useState<Phase>(initialPhase);
   const [userChoice, setUserChoice] = useState<'yes' | 'no' | null>(null);
   const [showButtons, setShowButtons] = useState(false);
@@ -40,6 +39,8 @@ export const ExperiencePhases = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showFinalLoveText, setShowFinalLoveText] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [phase7LineIndex, setPhase7LineIndex] = useState(0);
+  const [finalLoveVisible, setFinalLoveVisible] = useState(false);
   const [heartParticles] = useState(() =>
     Array.from({ length: 28 }).map((_, i) => ({
       id: i,
@@ -87,6 +88,8 @@ export const ExperiencePhases = ({
     setCurrentPhase(2);
   }, []);
 
+  const finalLines = t('finalParagraph', language) as string[];
+
   // Auto-phase progression (2 → 8)
   useEffect(() => {
     if (currentPhase < 2 || currentPhase > 8) return;
@@ -97,7 +100,7 @@ export const ExperiencePhases = ({
       4: 7000,
       5: 6000,
       6: 8000,
-      7: 65000,
+      7: Math.max(32000, finalLines.length * 1700 + 3500),
       8: 8000,
     };
 
@@ -106,12 +109,13 @@ export const ExperiencePhases = ({
     }, phaseDurations[currentPhase] || 6000);
 
     return () => clearTimeout(timer);
-  }, [currentPhase]);
+  }, [currentPhase, finalLines.length]);
 
   const replacements = { name: config.name, time: getCurrentTime() };
   const showLoveBackground = currentPhase >= 7;
   const mergedYes = noPressCount >= 4;
   const yesScale = Math.min(1 + noPressCount * 0.22, 2.2);
+  const mergedYesScale = Math.min(1.7 + Math.max(0, noPressCount - 4) * 0.18, 3);
 
   useEffect(() => {
     if (!showInputBox || !loveText.trim()) {
@@ -122,6 +126,19 @@ export const ExperiencePhases = ({
     const timer = setTimeout(() => setShowLengthPrompt(true), 1000);
     return () => clearTimeout(timer);
   }, [loveText, showInputBox]);
+
+  useEffect(() => {
+    if (currentPhase !== 7) {
+      setPhase7LineIndex(0);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setPhase7LineIndex((prev) => Math.min(prev + 1, finalLines.length - 1));
+    }, 1700);
+
+    return () => clearInterval(interval);
+  }, [currentPhase, finalLines.length]);
 
   const handleNoPress = () => {
     setNoPressCount((prev) => prev + 1);
@@ -148,6 +165,17 @@ export const ExperiencePhases = ({
       setSubmitError('Could not save online right now. Please try again.');
     }
   };
+
+  useEffect(() => {
+    if (!showFinalLoveText) {
+      setFinalLoveVisible(false);
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setFinalLoveVisible(true));
+    });
+  }, [showFinalLoveText]);
 
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden bg-black text-white">
@@ -239,16 +267,12 @@ export const ExperiencePhases = ({
           )}
 
 {currentPhase === 7 && (
-  <div className="flex flex-col items-center justify-center gap-4 text-center max-w-2xl">
-    {t('finalParagraph', language).map((line, i) => (
-        <PhaseText
-          key={i}
-          text={line}
-          isVisible
-          variant="default"
-          delay={i * 1400}
-        />
-      ))}
+  <div className="flex min-h-[30vh] flex-col items-center justify-center text-center max-w-2xl">
+    <FadeLine
+      key={language}
+      text={finalLines[phase7LineIndex] || ''}
+      variantClass="phase-text"
+    />
   </div>
 )}
 
@@ -265,16 +289,6 @@ export const ExperiencePhases = ({
       {/* Phase 9 - Final interactive love scene */}
       {currentPhase === 9 && (
         <>
-          <button
-            type="button"
-            onClick={() => navigate('/love-vault')}
-            className="fixed right-5 top-5 z-30 rounded-full border border-rose-300/70 bg-rose-500/20 px-4 py-2 text-xl"
-            aria-label="Open private love page"
-            title="Open private love page"
-          >
-            ❤
-          </button>
-
           <div
             className="fixed inset-0 z-10 flex flex-col items-center justify-center px-6 transition-colors duration-700"
             style={{
@@ -283,7 +297,7 @@ export const ExperiencePhases = ({
           >
             {!showFinalLoveText && (
               <h2
-                className={`text-center text-4xl font-extrabold uppercase tracking-[0.2em] text-red-500 transition-opacity duration-500 sm:text-6xl ${isSubmitting ? 'opacity-0' : 'opacity-100'}`}
+                className={`text-center text-4xl font-extrabold uppercase tracking-[0.2em] text-red-500 transition-all duration-700 ease-[var(--ease-cinematic)] sm:text-6xl ${isSubmitting ? 'pointer-events-none opacity-0 blur-sm' : 'opacity-100'}`}
                 style={{ textShadow: '0 0 22px rgba(239,68,68,0.9)' }}
               >
                 i love you, for ever
@@ -291,17 +305,23 @@ export const ExperiencePhases = ({
             )}
 
             {!showFinalLoveText && (
-              <div className={`mt-8 flex flex-col items-center gap-4 transition-opacity duration-500 ${isSubmitting ? 'opacity-0' : 'opacity-100'}`}>
-                <p className="text-lg text-white/90 sm:text-xl">do you love me?</p>
+              <div
+                className={`mt-8 flex w-full max-w-lg flex-col items-center gap-4 transition-all duration-700 ease-[var(--ease-cinematic)] ${isSubmitting ? 'pointer-events-none opacity-0 translate-y-2' : 'opacity-100 translate-y-0'}`}
+              >
+                <div
+                  className={`flex w-full flex-col items-center gap-4 transition-all duration-700 ease-[var(--ease-cinematic)] ${
+                    isLoveAccepted ? 'pointer-events-none max-h-0 opacity-0' : 'max-h-40 opacity-100'
+                  } overflow-hidden`}
+                >
+                  <p className="text-lg text-white/90 transition-opacity duration-700 sm:text-xl">do you love me?</p>
 
-                {!isLoveAccepted && (
                   <div className="flex items-center justify-center gap-3">
                     {!mergedYes && (
                       <>
                         <button
                           type="button"
                           onClick={handleYesPress}
-                          className="rounded-xl bg-rose-500 px-5 py-3 text-sm font-bold uppercase tracking-wider text-white shadow-lg transition-transform duration-300"
+                          className="rounded-xl bg-rose-500 px-5 py-3 text-sm font-bold uppercase tracking-wider text-white shadow-lg transition-all duration-500"
                           style={{ transform: `scale(${yesScale})`, transformOrigin: 'center' }}
                         >
                           yes
@@ -309,7 +329,7 @@ export const ExperiencePhases = ({
                         <button
                           type="button"
                           onClick={handleYesPress}
-                          className="rounded-xl bg-fuchsia-500 px-5 py-3 text-sm font-bold uppercase tracking-wider text-white shadow-lg transition-transform duration-300"
+                          className="rounded-xl bg-fuchsia-500 px-5 py-3 text-sm font-bold uppercase tracking-wider text-white shadow-lg transition-all duration-500"
                           style={{ transform: `scale(${yesScale})`, transformOrigin: 'center' }}
                         >
                           yes
@@ -321,7 +341,8 @@ export const ExperiencePhases = ({
                       <button
                         type="button"
                         onClick={handleYesPress}
-                        className="rounded-2xl bg-gradient-to-r from-rose-500 to-fuchsia-600 px-16 py-6 text-2xl font-extrabold uppercase tracking-[0.2em] text-white shadow-[0_0_30px_rgba(244,63,94,0.9)]"
+                        className="rounded-2xl bg-gradient-to-r from-rose-500 to-fuchsia-600 px-16 py-6 text-2xl font-extrabold uppercase tracking-[0.2em] text-white shadow-[0_0_30px_rgba(244,63,94,0.9)] transition-all duration-500"
+                        style={{ transform: `scale(${mergedYesScale})` }}
                       >
                         yessss
                       </button>
@@ -330,54 +351,62 @@ export const ExperiencePhases = ({
                     <button
                       type="button"
                       onClick={handleNoPress}
-                      className="rounded-xl border border-white/50 bg-black/40 px-4 py-2 text-sm uppercase tracking-wider text-white"
+                      className="rounded-xl border border-white/50 bg-black/40 px-4 py-2 text-sm uppercase tracking-wider text-white transition-opacity duration-500"
                     >
                       no
                     </button>
                   </div>
-                )}
+                </div>
 
-                {isLoveAccepted && (
-                  <div className="flex max-w-2xl flex-col items-center gap-5 text-center">
-                    <p className="animate-[float-note_4s_ease-in-out_infinite] text-lg text-purple-200 sm:text-2xl">
-                      i wanted it to be dark red but purple is ur lovely one 😢
-                    </p>
+                <div
+                  className={`flex max-w-2xl flex-col items-center gap-5 text-center transition-all duration-700 ease-[var(--ease-cinematic)] ${
+                    isLoveAccepted ? 'translate-y-0 opacity-100' : 'pointer-events-none max-h-0 translate-y-2 opacity-0'
+                  } overflow-hidden`}
+                >
+                  <p className="animate-[float-note_4s_ease-in-out_infinite] text-lg text-purple-200 sm:text-2xl">
+                    i wanted it to be dark red but purple is ur lovely one 😢
+                  </p>
 
-                    {showInputBox && !showFinalLoveText && (
-                      <div className="w-full max-w-md rounded-xl border border-purple-200/40 bg-purple-900/20 p-4">
-                        <input
-                          type="text"
-                          value={loveText}
-                          onChange={(e) => {
-                            setLoveText(e.target.value);
-                            setShowLengthPrompt(false);
-                          }}
-                          placeholder="a lovely text?"
-                          className="w-full rounded-md border border-purple-300/40 bg-black/30 px-4 py-3 text-white outline-none placeholder:text-purple-200/70"
-                        />
-                        {showLengthPrompt && (
-                          <p className="mt-3 text-sm text-purple-100">
-                            {loveText.length} character only? 😭
-                          </p>
-                        )}
-                        <button
-                          type="button"
-                          onClick={handleSubmitLoveText}
-                          disabled={!loveText.trim() || isSubmitting}
-                          className="mt-4 w-full rounded-md bg-purple-500 px-4 py-2 font-semibold text-white disabled:opacity-50"
-                        >
-                          {isSubmitting ? 'saving...' : 'submit'}
-                        </button>
-                        {submitError && <p className="mt-2 text-sm text-rose-200">{submitError}</p>}
-                      </div>
-                    )}
-                  </div>
-                )}
+                  {showInputBox && !showFinalLoveText && (
+                    <div className="w-full max-w-md rounded-xl border border-purple-200/40 bg-purple-900/20 p-4 transition-all duration-700 ease-[var(--ease-cinematic)]">
+                      <input
+                        type="text"
+                        value={loveText}
+                        onChange={(e) => {
+                          setLoveText(e.target.value);
+                          setShowLengthPrompt(false);
+                        }}
+                        placeholder="a lovely text?"
+                        className="w-full rounded-md border border-purple-300/40 bg-black/30 px-4 py-3 text-white outline-none transition-opacity duration-500 placeholder:text-purple-200/70"
+                      />
+                      <p
+                        className={`mt-3 text-sm text-purple-100 transition-all duration-500 ${
+                          showLengthPrompt ? 'opacity-100' : 'pointer-events-none max-h-0 opacity-0'
+                        } overflow-hidden`}
+                      >
+                        {loveText.length} character only? 😭
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleSubmitLoveText}
+                        disabled={!loveText.trim() || isSubmitting}
+                        className="mt-4 w-full rounded-md bg-purple-500 px-4 py-2 font-semibold text-white transition-opacity duration-500 disabled:opacity-50"
+                      >
+                        {isSubmitting ? 'saving...' : 'submit'}
+                      </button>
+                      {submitError && <p className="mt-2 text-sm text-rose-200">{submitError}</p>}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
             {showFinalLoveText && (
-              <p className="animate-[fade-in-up_1s_ease_forwards] text-center text-5xl font-extrabold text-rose-200 sm:text-7xl">
+              <p
+                className={`text-center text-5xl font-extrabold text-rose-200 transition-all duration-1000 ease-[var(--ease-cinematic)] sm:text-7xl ${
+                  finalLoveVisible ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'
+                }`}
+              >
                 Love you &lt;3
               </p>
             )}

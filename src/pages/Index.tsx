@@ -111,10 +111,15 @@ const Index = () => {
       role="main"
       aria-label="Birthday Landing Gateway"
     >
-      <div className="fixed left-4 top-4 z-30 flex items-center gap-2 rounded-full border border-rose-300/40 bg-black/40 px-3 py-2 backdrop-blur-sm">
-        <span className="text-lg" aria-hidden="true">❤</span>
-        <span className="text-xs uppercase tracking-[0.2em] text-white/90">Birthday</span>
-      </div>
+      <button
+        type="button"
+        onClick={() => navigate('/love-vault')}
+        className="fixed right-5 top-5 z-30 rounded-full border border-rose-300/70 bg-rose-500/20 px-4 py-2 text-xl"
+        aria-label="Open private love page"
+        title="Open private love page"
+      >
+        ❤
+      </button>
 
       {/* Global hidden audio for background music (persists across phases) */}
       {landingTrack && (

@@ -21,59 +21,79 @@ export const PhaseText = ({
   onComplete,
 }: PhaseTextProps) => {
   const [shouldRender, setShouldRender] = useState(false);
-  const [hasAnimated, setHasAnimated] = useState(false);
+  const [entered, setEntered] = useState(false);
   const [activeGlitch, setActiveGlitch] = useState<string | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout>();
-  
+  const skipTextCrossfadeRef = useRef(true);
+
   useEffect(() => {
-    if (isVisible && !hasAnimated) {
-      timeoutRef.current = setTimeout(() => {
-        setShouldRender(true);
-        setHasAnimated(true);
-        
-        // Trigger completion callback after animation
-        if (onComplete) {
-          setTimeout(onComplete, 1000);
-        }
-      }, delay);
+    if (!isVisible) {
+      setShouldRender(false);
+      setEntered(false);
+      skipTextCrossfadeRef.current = true;
+      return;
     }
-    
+
+    let completeTimer: ReturnType<typeof setTimeout> | undefined;
+
+    timeoutRef.current = setTimeout(() => {
+      setShouldRender(true);
+      requestAnimationFrame(() => setEntered(true));
+      if (onComplete) {
+        completeTimer = setTimeout(onComplete, 1000);
+      }
+    }, delay);
+
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
+      if (completeTimer) {
+        clearTimeout(completeTimer);
+      }
     };
-  }, [isVisible, delay, hasAnimated, onComplete]);
-  
+  }, [isVisible, delay, onComplete]);
+
+  /** When text changes mid-phase, softly crossfade (skip first reveal) */
+  useEffect(() => {
+    if (!shouldRender) return;
+    if (skipTextCrossfadeRef.current) {
+      skipTextCrossfadeRef.current = false;
+      return;
+    }
+
+    setEntered(false);
+    const t = setTimeout(() => setEntered(true), 420);
+    return () => clearTimeout(t);
+  }, [text, shouldRender]);
+
   // Trigger random glitch on glitch words
   useEffect(() => {
-    if (!shouldRender || glitchWords.length === 0) return;
-    
+    if (!entered || glitchWords.length === 0) return;
+
     const triggerGlitch = () => {
       const randomWord = glitchWords[Math.floor(Math.random() * glitchWords.length)];
       setActiveGlitch(randomWord);
-      
+
       setTimeout(() => {
         setActiveGlitch(null);
       }, 150);
     };
-    
-    // Random glitch timing
+
     const interval = setInterval(() => {
       if (Math.random() > 0.7) {
         triggerGlitch();
       }
     }, 3000);
-    
+
     return () => clearInterval(interval);
-  }, [shouldRender, glitchWords]);
-  
+  }, [entered, glitchWords]);
+
   if (!shouldRender) return null;
-  
-  // Process text to wrap glitch words
+
   const processText = () => {
     if (glitchWords.length === 0) return text;
-    
+
     let processedText = text;
     glitchWords.forEach((word) => {
       const isActive = activeGlitch === word;
@@ -82,24 +102,24 @@ export const PhaseText = ({
         `<span class="glitch ${isActive ? 'active' : ''}" data-text="${word}">${word}</span>`
       );
     });
-    
+
     return processedText;
   };
-  
+
   const variantClass = {
     default: 'phase-text',
     large: 'phase-text-large',
     small: 'phase-text-small',
   }[variant];
-  
+
   return (
     <div
       className={cn(
         variantClass,
-        'animate-fade-in-up text-center max-w-[90vw] md:max-w-[70vw] px-4',
+        'text-center max-w-[90vw] md:max-w-[70vw] px-4 transition-all duration-[var(--duration-text)] ease-[var(--ease-cinematic)] motion-reduce:transition-none motion-reduce:opacity-100',
+        entered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2',
         className
       )}
-      style={{ opacity: 0 }}
       dangerouslySetInnerHTML={{ __html: processText() }}
       role="text"
       aria-live="polite"
